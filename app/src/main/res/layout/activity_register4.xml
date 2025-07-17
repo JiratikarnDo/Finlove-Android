@@ -1,0 +1,166 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RegisterActivity4">
+
+    <TextView
+        android:id="@+id/textViewTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="170dp"
+        android:text="เกี่ยวกับคุณ"
+        android:textAlignment="center"
+        android:textColor="@color/blue_main"
+        android:textSize="45sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.311"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewEducation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="28dp"
+        android:text="ระดับการศึกษา"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textViewTitle" />
+
+    <Button
+        android:id="@+id/buttonHighSchool"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_selector"
+        android:text="มัธยมศึกษา"
+        android:textColor="@drawable/text_selector"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewEducation" />
+
+    <Button
+        android:id="@+id/buttonBachelor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="17dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_selector"
+        android:text="ปริญญาตรี"
+        android:textColor="@drawable/text_selector"
+        app:layout_constraintStart_toEndOf="@+id/buttonHighSchool"
+        app:layout_constraintTop_toBottomOf="@+id/textViewEducation" />
+
+    <Button
+        android:id="@+id/buttonMaster"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="17dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_selector"
+        android:text="ปริญญาโท"
+        android:textColor="@drawable/text_selector"
+        app:layout_constraintStart_toEndOf="@+id/buttonBachelor"
+        app:layout_constraintTop_toBottomOf="@+id/textViewEducation" />
+
+    <Button
+        android:id="@+id/buttonPhd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_selector"
+        android:text="ปริญญาเอก"
+        android:textColor="@drawable/text_selector"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonHighSchool" />
+
+    <Button
+        android:id="@+id/buttonWorking"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="17dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_selector"
+        android:text="กำลังทำงาน"
+        android:textColor="@drawable/text_selector"
+        app:layout_constraintStart_toEndOf="@+id/buttonPhd"
+        app:layout_constraintTop_toBottomOf="@+id/buttonBachelor" />
+
+    <TextView
+        android:id="@+id/textViewHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="16dp"
+        android:text="อาศัยอยู่ที่"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonWorking" />
+
+    <EditText
+        android:id="@+id/editTextHome"
+        android:layout_width="300dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/edittext"
+        android:hint="กรุณากรอกที่อยู่"
+        android:paddingLeft="16dp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewHome" />
+
+    <!-- เพิ่ม TextView สำหรับแสดงข้อความ "เกิดวันที่" -->
+    <TextView
+        android:id="@+id/textViewSelectDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="16dp"
+        android:text="เกิดวันที่"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextHome" />
+
+    <Button
+        android:id="@+id/buttonSelectDate"
+        android:layout_width="300dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/edittext"
+        android:text="วัน/เดือน/ปีเกิด"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSelectDate" />
+
+    <ImageButton
+        android:id="@+id/buttonNextStep4"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="130dp"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/cyclebutton"
+        android:contentDescription="ปุ่มถัดไป"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:src="@drawable/ic_arrow_right"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.8"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonSelectDate" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

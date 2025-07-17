@@ -1,0 +1,22 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- สำหรับ item ที่ถูกเลือก -->
+    <item android:state_checked="true">
+        <layer-list>
+            <!-- วงกลมสีขาว -->
+            <item>
+                <shape android:shape="oval">
+                    <solid android:color="@android:color/white" />
+                    <size android:width="16dp" android:height="16dp" />
+                </shape>
+            </item>
+
+            <!-- ระยะ inset เพื่อไม่ให้ทับไอคอน -->
+            <item android:drawable="@android:color/transparent"
+                android:top="6dp" android:bottom="6dp"
+                android:left="6dp" android:right="6dp"/>
+        </layer-list>
+    </item>
+
+    <!-- สำหรับ item ที่ไม่ได้เลือก -->
+    <item android:drawable="@android:color/transparent" />
+</selector>

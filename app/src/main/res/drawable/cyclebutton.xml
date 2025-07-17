@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="#FE6AA6" /> <!-- เปลี่ยนสีให้ตรงกับที่ต้องการ -->
+
+    <size
+        android:width="100dp"
+        android:height="100dp" /> <!-- ปรับขนาดตามต้องการ -->
+
+    <stroke
+        android:width="2dp"
+        android:color="#FE6AA6" /> <!-- หากต้องการขอบ ให้ปรับสีขอบ -->
+
+</shape>

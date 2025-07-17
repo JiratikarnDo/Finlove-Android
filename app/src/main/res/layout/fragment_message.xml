@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.message.MessageFragment">
+
+    <!-- RecyclerView สำหรับแสดงรายชื่อผู้ใช้ที่จับคู่ -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewUserList"
+        android:layout_width="0dp"
+        android:layout_marginTop="50dp"
+        android:layout_height="553dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintBottom_toTopOf="@id/buttonRestoreAllChats"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- ปุ่มเรียกคืนแชททั้งหมด -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/buttonRestoreAllChats"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="เรียกคืนแชททั้งหมด"
+        android:background="@drawable/button_normal"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recyclerViewUserList" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

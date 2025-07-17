@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <item
+            android:id="@+id/navigation_home"
+            android:icon="@drawable/fireloveicon"
+            android:title="" />
+
+        <item
+            android:id="@+id/navigation_viewuser"
+            android:icon="@drawable/viewusericon"
+            android:title="" />
+
+        <item
+            android:id="@+id/navigation_message"
+            android:icon="@drawable/chaticon"
+            android:title="" />
+        <item
+            android:id="@+id/navigation_profile"
+            android:icon="@drawable/profileicon"
+            android:title="" />
+
+    </menu>
+

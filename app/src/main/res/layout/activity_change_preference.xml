@@ -1,0 +1,247 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ChangePreferenceActivity">
+
+    <TextView
+        android:id="@+id/textViewTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="170dp"
+        android:text="คุณชอบอะไร"
+        android:textAlignment="center"
+        android:textColor="@color/blue_main"
+        android:textSize="45sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.243"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <GridLayout
+        android:id="@+id/gridLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_margin="5dp"
+        android:alignmentMode="alignMargins"
+        android:columnCount="4"
+        android:rowCount="4"
+        android:paddingTop="30dp"
+        android:layout_gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/textViewTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/buttonOption1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ฟุตบอล"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ภาพยนตร์"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ท่องเที่ยว"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="อนิเมชั่น"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="ช็อปปิ้ง"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="เล่นดนตรี"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="เล่นกีฬา"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="เล่นเกม"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="อ่านหนังสือ"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ปาร์ตี้"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="สายควัน"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ออกกำลังกาย"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ตกปลา"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="รักสัตว์"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ของหวาน"
+            android:layout_margin="5dp"
+            android:layout_marginTop="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+        <Button
+            android:id="@+id/buttonOption16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ถ่ายรูป"
+            android:layout_marginTop="15dp"
+            android:layout_margin="5dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/button_selector"
+            android:textColor="@drawable/text_selector" />
+
+    </GridLayout>
+
+    <ImageButton
+        android:id="@+id/buttonsave"
+        android:layout_width="93dp"
+        android:layout_height="93dp"
+        android:layout_marginTop="44dp"
+        android:background="@drawable/cyclebutton"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:src="@drawable/ic_arrow_right"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.889"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gridLayout" />
+</androidx.constraintlayout.widget.ConstraintLayout>

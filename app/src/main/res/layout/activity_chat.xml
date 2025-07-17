@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Toolbar with nickname, back button, and Block/Unblock buttons aligned to the right -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/blue_main"
+        android:elevation="4dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="@drawable/ic_back_arrow"
+        android:theme="?attr/actionBarTheme">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/buttonBlockChat"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
+                android:text="บล็อค"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:background="@drawable/button_normal"
+                android:layout_marginEnd="8dp" />
+
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/buttonUnblockChat"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
+                android:text="เลิกบล็อค"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:background="@drawable/button_normal" />
+        </LinearLayout>
+    </androidx.appcompat.widget.Toolbar>
+
+    <LinearLayout
+        android:id="@+id/popupBanner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/popup_banner_background"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:visibility="gone"
+        android:elevation="4dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/imgTour"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
+            android:background="@drawable/button_normal"
+            android:src="@drawable/skyroom_pic" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="8dp">
+
+            <TextView
+                android:id="@+id/txtPlaceName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="คุณกำลังมองหาที่ออกเดตอยู่รึป่าว ให้พวกเราช่วยแนะนำคุณสิ"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/txtLinkMore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ดูเพิ่มเติม"
+                android:textColor="#FFE30D"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingTop="4dp"
+                android:autoLink="none" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnCloseBanner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:contentDescription="ปิดแถบแนะนำ"
+            android:src="@drawable/ic_back_arrow" />
+    </LinearLayout>
+
+
+
+    <!-- Empty chat message positioned near the top with a slight margin from the toolbar -->
+    <TextView
+        android:id="@+id/emptyChatMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="เริ่มแชทกันเลย !!!"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:gravity="center"
+        android:background="@drawable/button_normal"
+        android:padding="16dp"
+        android:elevation="4dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
+
+    <!-- RecyclerView for chat messages -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewChat"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toTopOf="@id/messageInputLayout" />
+
+    <!-- Message input layout -->
+    <LinearLayout
+        android:id="@+id/messageInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Message input field -->
+        <EditText
+            android:id="@+id/messageInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="พิมพ์ข้อความ"
+            android:background="@drawable/rounded_square_shape"
+            android:padding="12dp"/>
+
+        <!-- Send button -->
+        <ImageButton
+            android:id="@+id/sendButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/ic_message"
+            android:contentDescription="Send"
+            android:background="?attr/selectableItemBackground"
+            android:scaleType="centerInside"
+            android:padding="8dp"/>
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

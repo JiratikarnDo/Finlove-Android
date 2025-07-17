@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ธีมหลักของแอป -->
+    <style name="Theme.Finlove" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- กำหนดสีหลักต่าง ๆ -->
+        <item name="colorPrimary">#0DD7E9</item>
+        <item name="colorPrimaryVariant">#09B1C0</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#FE6AA6</item>
+        <item name="colorSecondaryVariant">#B42961</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+
+        <item name="android:fontFamily">@font/kanit_regular</item>
+        <item name="fontFamily">@font/kanit_regular</item>
+
+
+        <!-- กำหนด font, style หรือ attribute อื่น ๆ ตามต้องการ -->
+    </style>
+
+    <style name="ToolbarTitleStyle" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CircleImageStyle" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerSize">25%</item>
+    </style>
+
+</resources>

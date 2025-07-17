@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- พื้นหลังของ ProgressBar -->
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="#E0E0E0" /> <!-- สีพื้นหลัง -->
+        </shape>
+    </item>
+
+    <!-- แถบความคืบหน้าเมื่อ indeterminate -->
+    <item android:id="@android:id/secondaryProgress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="8dp" />
+                <solid android:color="#B3B3B3" /> <!-- สีของ secondary progress -->
+            </shape>
+        </clip>
+    </item>
+
+    <!-- แถบความคืบหน้าหลัก -->
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="8dp" />
+                <gradient
+                    android:startColor="#FF5722"
+                    android:endColor="#FFC107"
+                    android:angle="0" /> <!-- สีกวาดที่เปลี่ยนจากส้มไปเหลือง -->
+            </shape>
+        </clip>
+    </item>
+
+</layer-list>
