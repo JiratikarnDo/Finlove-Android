@@ -59,7 +59,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val locationPermissionRequest =
@@ -117,11 +116,11 @@ class HomeFragment : Fragment() {
 
     fun calculateAge(dateString: String?): Int {
         if (dateString.isNullOrEmpty()) {
-            Log.d("HomeFragment", "⛔ dateString is null or empty")
+            Log.d("HomeFragment", "dateString is null or empty")
             return -1
         }
         return try {
-            val sdf = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)  // แก้ตรงนี้
+            val sdf = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
             val birthDate = sdf.parse(dateString.trim())
 
             val today = Calendar.getInstance()
@@ -133,11 +132,11 @@ class HomeFragment : Fragment() {
                 age--
             }
 
-            Log.d("HomeFragment", "✅ Parsed birthDate: $birthDate")
+            Log.d("HomeFragment", "Parsed birthDate: $birthDate")
             age
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.e("HomeFragment", "❌ Failed to parse date: ${e.message}")
+            Log.e("HomeFragment", "Failed to parse date: ${e.message}")
             -1
         }
     }
