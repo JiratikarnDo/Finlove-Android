@@ -31,6 +31,8 @@ import th.ac.rmutto.finlove.databinding.FragmentMessageBinding
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
+import th.ac.rmutto.finlove.MainActivity
+
 
 class MessageFragment : Fragment() {
 

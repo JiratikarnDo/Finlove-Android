@@ -35,7 +35,7 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import androidx.activity.result.IntentSenderRequest
-
+import th.ac.rmutto.finlove.utils.AnimationHelper
 
 
 class HomeFragment : Fragment() {
@@ -271,16 +271,21 @@ class HomeFragment : Fragment() {
 
         // เมื่อกดปุ่ม "Like"
         likeButton.setOnClickListener {
+            AnimationHelper.animateButtonPressBounceRotate(it as ImageButton){
             likeUser(user.userID)
+        }
         }
 
         // เมื่อกดปุ่ม "Dislike"
         dislikeButton.setOnClickListener {
-            dislikeUser(user.userID)
+            AnimationHelper.animateButtonPressBounceRotate(it as ImageButton) {
+                    dislikeUser(user.userID)
+            }
         }
 
         // เพิ่ม View ที่สร้างขึ้นใหม่ไปยัง LinearLayout
         userListLayout.addView(userView)
+        // *** เรียกใช้ AnimationHelper สำหรับการแสดงการ์ดผู้ใช้ ***
     }
 
 

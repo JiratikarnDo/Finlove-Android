@@ -49,6 +49,11 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.activity)
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+
+// เพิ่มไลบรารีสำหรับ Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging")
+
     implementation("androidx.core:core-ktx:1.10.1")
     implementation ("com.google.android.material:material:1.11.0")
     implementation ("com.google.android.gms:play-services-location:21.0.1")
