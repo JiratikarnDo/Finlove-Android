@@ -20,6 +20,7 @@ import org.json.JSONArray
 import th.ac.rmutto.finlove.R
 import th.ac.rmutto.finlove.databinding.FragmentHomeBinding
 import java.io.IOException
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -35,6 +36,9 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import androidx.activity.result.IntentSenderRequest
+import kotlinx.coroutines.*
+
+val client = OkHttpClient()
 
 
 
@@ -523,6 +527,26 @@ class HomeFragment : Fragment() {
             }
         }
         return users
+    }
+
+    fun fetchUserData(userId: String, callback: (String?) -> Unit) {
+        val url = getString(R.string.root_url2) + "/ai_v2/recommend/$userID"
+        val request = Request.Builder().url(url).build()
+
+        // ทำงานบน background thread ด้วย coroutine
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val response = client.newCall(request).execute()
+                val body = if (response.isSuccessful) response.body?.string() else null
+                withContext(Dispatchers.Main) {
+                    callback(body)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    callback(null)
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
