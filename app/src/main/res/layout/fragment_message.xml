@@ -7,20 +7,39 @@
     android:layout_height="match_parent"
     tools:context=".ui.message.MessageFragment">
 
+    <!-- Title -->
+
     <!-- RecyclerView สำหรับแสดงรายชื่อผู้ใช้ที่จับคู่ -->
+
+    <!-- ปุ่มเรียกคืนแชททั้งหมด -->
+
+    <TextView
+        android:id="@+id/titleLikes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="55dp"
+        android:text="ข้อความ"
+        android:textColor="#000000"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerViewUserList"
+        app:layout_constraintStart_toStartOf="@id/recyclerViewUserList"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewUserList"
         android:layout_width="0dp"
-        android:layout_marginTop="50dp"
         android:layout_height="553dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         app:layout_constraintBottom_toTopOf="@id/buttonRestoreAllChats"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/titleLikes" />
 
-    <!-- ปุ่มเรียกคืนแชททั้งหมด -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonRestoreAllChats"
         android:layout_width="150dp"

@@ -75,40 +75,41 @@
             android:visibility="visible" />
     </LinearLayout>
 
+
     <LinearLayout
         android:id="@+id/likePreferencesContainer"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="18dp"
-        android:gravity="center"
         android:orientation="horizontal"
-        android:padding="16dp"
-        android:visibility="gone"
+        android:padding="8dp"
         app:layout_constraintBottom_toTopOf="@+id/buttonGroup"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/linearLayout2"
         app:layout_constraintTop_toBottomOf="@id/linearLayout2">
+
 
         <!-- บล็อกที่ 1 -->
         <TextView
             android:id="@+id/block1"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/button_pressed"
             android:gravity="center"
             android:padding="16dp"
+            android:textSize="18dp"
             android:text="ชอบเที่ยว"
             android:textColor="#fff" />
 
         <!-- บล็อกที่ 2 -->
         <TextView
             android:id="@+id/block2"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
+            android:textSize="18dp"
             android:background="@drawable/button_pressed"
             android:gravity="center"
             android:padding="16dp"

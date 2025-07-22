@@ -11,14 +11,25 @@ import androidx.core.view.updatePadding
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.badge.BadgeDrawable
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class MainActivity : AppCompatActivity() {
     private var userID: Int = -1
+
+    private lateinit var sharedPref: android.content.SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_main)
+        // *** Initialize sharedPref ที่นี่ ***
+        sharedPref = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
 
         val rootView = findViewById<android.view.View>(R.id.root_layout)
         rootView.setOnApplyWindowInsetsListener { view, insets ->
@@ -98,6 +109,17 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.d("MainActivity", "onResume called.")
+    }
+
+    // *** เมธอด onDestroy() ต้องอยู่ตรงนี้ (นอก onCreate()) ***
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("MainActivity", "onDestroy called.")
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.top_appbar_menu, menu)
         return true
@@ -122,4 +144,7 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-}
+
+    }
+
+
