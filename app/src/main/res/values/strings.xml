@@ -10,9 +10,9 @@
       <string name="root_url2">https://fin-love.com</string>
 
   <!-    สำหรับ manual ip ครับ-->
-    <string name="root_url">http://10.13.4.119:8501</string>
-    <string name="root_url2">http://10.13.4.119:6502</string>
-    <string name="root_url3">http://10.13.4.119:6501</string>
+    <string name="root_url">http://10.10.9.66:8501</string>
+    <string name="root_url2">http://10.10.9.66:6502</string>
+    <string name="root_url3">http://10.10.9.66:6501</string>
 
 
     <string-array name="education_levels">

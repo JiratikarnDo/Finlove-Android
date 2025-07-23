@@ -17,7 +17,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import android.view.ViewGroup
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import th.ac.rmutto.finlove.utils.AnimationHelper
 
 class MainActivity : AppCompatActivity() {
     private var userID: Int = -1
@@ -65,6 +67,12 @@ class MainActivity : AppCompatActivity() {
         navController.navigate(R.id.navigation_home, bundle)
 
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
+
+            val selectedItemView = bottomNavigationView.findViewById<ViewGroup>(menuItem.itemId)
+
+            selectedItemView?.let {
+                AnimationHelper.animateViewAppear(it) // หรือใช้ animateButtonPressBounceRotate ถ้าเป็น ImageButton
+            }
 
             val bundle = Bundle().apply {
                 putInt("userID", userID)

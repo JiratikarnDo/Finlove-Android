@@ -36,6 +36,13 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import androidx.activity.result.IntentSenderRequest
 import th.ac.rmutto.finlove.utils.AnimationHelper
+import okhttp3.Call
+import okhttp3.Callback
+import com.google.gson.Gson
+import okhttp3.Response
+import org.json.JSONObject
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+
 
 
 class HomeFragment : Fragment() {
@@ -85,22 +92,33 @@ class HomeFragment : Fragment() {
 
         // รับ userID ที่ถูกส่งมาจาก MainActivity
         userID = arguments?.getInt("userID", -1) ?: -1
+        selectedUserID = arguments?.getInt("selectedUserID", -1) ?: -1
+        Log.d("HomeFragment", "selectedUserID = $selectedUserID")
 
         checkAndRequestLocationPermission()
 
         // กู้คืน currentIndex หากมีการบันทึกไว้
-        if (savedInstanceState != null) {
-            currentIndex = savedInstanceState.getInt("currentIndex", 0)
-        }
-
-        // ถ้า userID ถูกส่งมาแล้ว ให้ดึงข้อมูลผู้ใช้
-        if (userID != -1) {
-            fetchRecommendedUsers { fetchedUsers ->
-                if (fetchedUsers.isNotEmpty()) {
-                    users = fetchedUsers
-                    displayUser(currentIndex) // แสดงผู้ใช้จาก currentIndex
+        if (selectedUserID != -1) {
+            // ถ้ามี selectedUserID แสดงว่าเข้ามาจาก WhoLikeFragment
+            fetchUserByID(selectedUserID) { user ->
+                if (user != null) {
+                    users = listOf(user)  // แสดงเฉพาะคนนี้
+                    currentIndex = 0
+                    displayUser(currentIndex)
                 } else {
-                    Toast.makeText(requireContext(), "ไม่พบผู้ใช้ที่แนะนำ", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "ไม่พบข้อมูลผู้ใช้ที่เลือก", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            // ถ้าไม่มี selectedUserID แสดงรายชื่อผู้ใช้แนะนำตามปกติ
+            if (userID != -1) {
+                fetchRecommendedUsers { fetchedUsers ->
+                    if (fetchedUsers.isNotEmpty()) {
+                        users = fetchedUsers
+                        displayUser(currentIndex)
+                    } else {
+                        Toast.makeText(requireContext(), "ไม่พบผู้ใช้ที่แนะนำ", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -120,26 +138,46 @@ class HomeFragment : Fragment() {
             Log.d("HomeFragment", "⛔ dateString is null or empty")
             return -1
         }
-        return try {
-            val sdf = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)  // แก้ตรงนี้
-            val birthDate = sdf.parse(dateString.trim())
 
-            val today = Calendar.getInstance()
-            val dob = Calendar.getInstance()
-            dob.time = birthDate!!
+        val patterns = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "EEE, dd MMM yyyy HH:mm:ss z"
+        )
 
-            var age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR)
-            if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
-                age--
+        var birthDate: Date? = null
+
+        for (pattern in patterns) {
+            try {
+                val sdf = SimpleDateFormat(
+                    pattern,
+                    if (pattern == "EEE, dd MMM yyyy HH:mm:ss z") Locale.ENGLISH else Locale.getDefault()
+                )
+                if (pattern.contains("Z")) {
+                    sdf.timeZone = TimeZone.getTimeZone("UTC")
+                }
+                birthDate = sdf.parse(dateString.trim())
+                if (birthDate != null) break
+            } catch (e: Exception) {
+                // ลอง pattern ถัดไป
             }
-
-            Log.d("HomeFragment", "✅ Parsed birthDate: $birthDate")
-            age
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("HomeFragment", "❌ Failed to parse date: ${e.message}")
-            -1
         }
+
+        if (birthDate == null) {
+            Log.e("HomeFragment", "❌ Failed to parse date: ไม่ตรงกับทุก pattern")
+            return -1
+        }
+
+        val today = Calendar.getInstance()
+        val dob = Calendar.getInstance()
+        dob.time = birthDate
+
+        var age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR)
+        if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
+            age--
+        }
+
+        Log.d("HomeFragment", "✅ Parsed birthDate: $birthDate")
+        return age
     }
 
     private fun checkAndRequestLocationPermission() {
@@ -260,8 +298,20 @@ class HomeFragment : Fragment() {
         val dislikeButton: ImageButton = userView.findViewById(R.id.buttonDislike)
 
 
+        // ดึงขนาดจริงของ ImageView (ถ้ายังไม่ได้ layout ให้ใช้ fallback เป็นขนาดหน้าจอ)
+        val width = if (profileImage.width > 0) profileImage.width else resources.displayMetrics.widthPixels
+        val height = if (profileImage.height > 0) profileImage.height else resources.displayMetrics.heightPixels
+
+
         nickname.text = user.nickname
-        Glide.with(requireContext()).load(user.profilePicture).into(profileImage)
+        // ปรับ performance ให้โหลดภาพไวขึ้น
+        Glide.with(requireContext())
+            .load(user.profilePicture)
+            // ตัดรูปให้พอดีขนาด ImageView
+            .override(width, height) // กำหนดขนาดรูป ลดขนาดภาพให้เหมาะสม (แก้ช้าเพราะโหลดรูปใหญ่)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)  // เก็บ cache ทั้ง original และรูปที่แปลงแล้ว
+            .into(profileImage)
+
 
         // ตรวจสอบสถานะ verify และแสดงไอคอนเครื่องหมายถูกหาก verify == 1
         if (user.verify == 1) {
@@ -302,6 +352,7 @@ class HomeFragment : Fragment() {
         }
         builder.create().show()
     }
+
 
     // ยืนยันการรายงานผู้ใช้
     private fun confirmReport(reportedID: Int, reportType: String) {
@@ -453,21 +504,43 @@ class HomeFragment : Fragment() {
 
     private fun fetchUserByID(targetUserID: Int, callback: (User?) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val url = getString(R.string.root_url) + "/api_v2/user/$targetUserID"
-            val request = Request.Builder().url(url).build()
+            val url = getString(R.string.root_url) + "/api_v2/user/detail"
+            val formBody = FormBody.Builder()
+                .add("userID", targetUserID.toString())
+                .build()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(formBody)
+                .build()
 
             try {
                 val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    val responseBody = response.body?.string()
-                    val jsonObject = JSONArray(responseBody).getJSONObject(0) // หรือ JSONObject(responseBody) ถ้าเป็น Object
+                val responseBody = response.body?.string()
+                Log.d("fetchUserByID", "Response body: $responseBody")
+
+                if (response.isSuccessful && !responseBody.isNullOrEmpty()) {
+                    // แก้ตรงนี้ด้วย: ถ้า response เป็น object → ใช้ JSONObject()
+                    val jsonObject = JSONObject(responseBody)
+
+                    val imageFile = jsonObject.getString("imageFile")
+
+                    val profilePicture = if (imageFile.startsWith("http")) {
+                        imageFile  // เป็น full URL อยู่แล้ว
+                    } else {
+                        val baseImageUrl = getString(R.string.root_url2) + "/ai_v2/user/"
+                        baseImageUrl + imageFile
+                    }
+
                     val user = User(
-                        jsonObject.getInt("UserID"),
+                        jsonObject.getInt("userID"),
                         jsonObject.getString("nickname"),
-                        jsonObject.getString("imageFile"),
-                        jsonObject.optString("dateBirth", ""),
+                        profilePicture,
+                        jsonObject.optString("DateBirth", ""),
                         jsonObject.getInt("verify")
                     )
+
+
                     withContext(Dispatchers.Main) {
                         callback(user)
                     }
@@ -477,6 +550,7 @@ class HomeFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
+                Log.e("fetchUserByID", "Exception: ${e.message}")
                 withContext(Dispatchers.Main) {
                     callback(null)
                 }
@@ -518,6 +592,9 @@ class HomeFragment : Fragment() {
             val jsonArray = JSONArray(it)
             for (i in 0 until jsonArray.length()) {
                 val jsonObject = jsonArray.getJSONObject(i)
+                val imageFile = jsonObject.getString("imageFile")
+                Log.d("parseUsers", "User $i imageFile: $imageFile")  // เพิ่มบรรทัดนี้
+
                 val user = User(
                     jsonObject.getInt("UserID"),
                     jsonObject.getString("nickname"),
