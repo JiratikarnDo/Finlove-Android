@@ -41,9 +41,11 @@ class WhoLikeFragment : Fragment() {
     }
 
     private fun fetchWhoLikeUsers() {
-        // ดึง userID ที่ล็อกอินจริง ๆ จาก SharedPreferences (ตั้งสมมติชื่อไฟล์และคีย์ให้ตรงกับที่คุณเก็บ)
-        val sharedPref = requireActivity().getSharedPreferences("FinLovePrefs", android.content.Context.MODE_PRIVATE)
-        val currentUserID = sharedPref.getInt("userID", -1)  // default -1 = ไม่มี userID
+        val sharedPref = requireActivity().getSharedPreferences(
+            "FinLovePrefs",
+            android.content.Context.MODE_PRIVATE
+        )
+        val currentUserID = sharedPref.getInt("userID", -1)
 
         if (currentUserID == -1) {
             Toast.makeText(requireContext(), "กรุณาล็อกอินก่อนใช้งาน", Toast.LENGTH_SHORT).show()
@@ -52,40 +54,77 @@ class WhoLikeFragment : Fragment() {
 
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        val url = getString(R.string.root_url) + "/api_v2/wholike?userID=$currentUserID"
+        // 👉 ดึง matched users ก่อน
+        val matchesUrl = getString(R.string.root_url) + "/api_v2/matches/$currentUserID"
+        val matchesRequest = Request.Builder().url(matchesUrl).build()
 
-        val request = Request.Builder()
-            .url(url)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
+        client.newCall(matchesRequest).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 activity?.runOnUiThread {
-                    Toast.makeText(requireContext(), "โหลดข้อมูลไม่สำเร็จ", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "โหลดข้อมูลไม่สำเร็จ (แมท)",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
             override fun onResponse(call: Call, response: Response) {
-                response.body?.string()?.let { jsonString ->
-                    Log.d("WhoLikeFragment", "Response JSON: $jsonString")
-                    val gson = Gson()
-                    val listType = object : TypeToken<List<User>>() {}.type
-                    val users: List<User> = gson.fromJson(jsonString, listType)
-
-                    activity?.runOnUiThread {
-                        adapter = WholikeAdapter(users) { clickedUser ->
-                            // เมื่อคลิกรายการใน RecyclerView ให้ navigate พร้อมส่งข้อมูล
-                            val bundle = Bundle().apply {
-                                putInt("userID", currentUserID)  // id ผู้ใช้หลัก (เรา)
-                                putInt("selectedUserID", clickedUser.id)  // id ผู้ใช้ที่ถูกคลิก
-                            }
-                            findNavController().navigate(R.id.navigation_home, bundle)
+                val matchedIDs = mutableSetOf<Int>()
+                response.body?.string()?.let { matchesJson ->
+                    try {
+                        val jsonArray =
+                            com.google.gson.JsonParser.parseString(matchesJson).asJsonArray
+                        jsonArray.forEach {
+                            val obj = it.asJsonObject
+                            matchedIDs.add(obj["userID"].asInt)
                         }
-                        recyclerView.adapter = adapter
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
+
+                // 👉 ดึง wholike ต่อหลังจากได้ matchedIDs แล้ว
+                val whoLikeUrl =
+                    getString(R.string.root_url) + "/api_v2/wholike?userID=$currentUserID"
+                val whoLikeRequest = Request.Builder().url(whoLikeUrl).build()
+
+                client.newCall(whoLikeRequest).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        activity?.runOnUiThread {
+                            Toast.makeText(
+                                requireContext(),
+                                "โหลดข้อมูลไม่สำเร็จ (wholike)",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+
+
+                    override fun onResponse(call: Call, response: Response) {
+                        response.body?.string()?.let { jsonString ->
+                            Log.d("WhoLikeFragment", "Response JSON: $jsonString")
+                            val gson = Gson()
+                            val listType = object : TypeToken<List<User>>() {}.type
+                            val users: List<User> = gson.fromJson(jsonString, listType)
+
+                            // ✅ กรองเฉพาะคนที่ยังไม่แมท
+                            val filteredUsers = users.filter { it.id !in matchedIDs }
+
+                            activity?.runOnUiThread {
+                                adapter = WholikeAdapter(filteredUsers) { clickedUser ->
+                                    val bundle = Bundle().apply {
+                                        putInt("userID", currentUserID)
+                                        putInt("selectedUserID", clickedUser.id)
+                                    }
+                                    findNavController().navigate(R.id.navigation_home, bundle)
+                                }
+                                recyclerView.adapter = adapter
+                            }
+                        }
+                    }
+                })
             }
         })
     }
-
 }

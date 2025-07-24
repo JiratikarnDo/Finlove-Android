@@ -396,10 +396,12 @@ class HomeFragment : Fragment() {
 
     // ฟังก์ชันไปยังผู้ใช้คนถัดไป
     private fun nextUser() {
-        currentIndex++
-        if (currentIndex >= users.size) {
-            currentIndex = 0 // วนกลับไปผู้ใช้คนแรก
+        if (users.isEmpty()) {
+            showNoMoreUsersDialog()
+            return
         }
+
+        currentIndex = currentIndex % users.size
         displayUser(currentIndex)
     }
 
@@ -421,7 +423,20 @@ class HomeFragment : Fragment() {
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 requireActivity().runOnUiThread {
                     if (response.isSuccessful) {
-                        checkMatch(likedID)
+                        // 🔴 ลบผู้ใช้ที่กด like ออกไปเลย
+                        users = users.filterNot { it.userID == likedID }
+
+                        // ✅ ถ้าเข้ามาจาก WhoLikeFragment
+                        if (selectedUserID != -1) {
+                            selectedUserID = -1  // เคลียร์เพื่อไม่ให้ล็อกอีก
+                            fetchRecommendedUsers { fetchedUsers ->
+                                users = fetchedUsers
+                                currentIndex = 0
+                                displayUser(currentIndex)
+                            }
+                        } else {
+                            checkMatch(likedID)
+                        }
                     } else {
                         Toast.makeText(requireContext(), "Error: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
@@ -493,7 +508,20 @@ class HomeFragment : Fragment() {
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 requireActivity().runOnUiThread {
                     if (response.isSuccessful) {
-                        nextUser() // เรียก nextUser หลังจากการดำเนินการสำเร็จ
+                        // 🔴 ลบผู้ใช้ที่ dislike ออกไปเลย
+                        users = users.filterNot { it.userID == dislikedID }
+
+                        // ✅ ถ้ามาจาก WhoLikeFragment (selectedUserID ถูกกำหนด)
+                        if (selectedUserID != -1) {
+                            selectedUserID = -1  // เคลียร์ flag
+                            fetchRecommendedUsers { fetchedUsers ->
+                                users = fetchedUsers
+                                currentIndex = 0
+                                displayUser(currentIndex)
+                            }
+                        } else {
+                            nextUser()
+                        }
                     } else {
                         Toast.makeText(requireContext(), "Error: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
@@ -606,6 +634,14 @@ class HomeFragment : Fragment() {
             }
         }
         return users
+    }
+
+    private fun showNoMoreUsersDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("หมดแล้ว 🎉")
+            .setMessage("คุณได้ดูผู้ใช้ที่แนะนำครบทั้งหมดแล้ว")
+            .setPositiveButton("ตกลง") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     override fun onDestroyView() {
