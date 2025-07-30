@@ -220,14 +220,24 @@ class HomeFragment : Fragment() {
     }
 
     private fun sendLocationToServer(latitude: Double, longitude: Double) {
-        val url = getString(R.string.root_url) + "/api_v2/update_location"  // สมมติ endpoint นี้
+        Log.d("sendLocationToServer", "Sending location: userID=$userID, lat=$latitude, lng=$longitude")
+        val url = getString(R.string.root_url) + "/api_v2/add-location"
         val formBody = FormBody.Builder()
-            .add("userID", userID.toString())
             .add("latitude", latitude.toString())
             .add("longitude", longitude.toString())
             .build()
 
-        client.newCall(Request.Builder().url(url).post(formBody).build()).enqueue(object : okhttp3.Callback {
+        // ดึง token จาก SharedPreferences
+        val sharedPref = requireContext().getSharedPreferences("FinLovePrefs", android.content.Context.MODE_PRIVATE)
+        val token = sharedPref.getString("jwt_token", "") ?: ""
+
+        val request = Request.Builder()
+            .url(url)
+            .post(formBody)
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 requireActivity().runOnUiThread {
                     Toast.makeText(requireContext(), "Failed to update location", Toast.LENGTH_SHORT).show()
@@ -245,6 +255,7 @@ class HomeFragment : Fragment() {
             }
         })
     }
+
 
 
 

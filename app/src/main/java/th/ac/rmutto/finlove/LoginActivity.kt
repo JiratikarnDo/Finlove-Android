@@ -2,6 +2,7 @@ package th.ac.rmutto.finlove
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -58,13 +59,20 @@ class LoginActivity : AppCompatActivity() {
 
                     withContext(Dispatchers.Main) {
                         if (response.isSuccessful) {
-                            val obj = JSONObject(response.body!!.string())
+                            val responseBodyStr = response.body!!.string()
+                            Log.d("LoginActivity", "Login API raw response: $responseBodyStr") // <<-- ใส่ log ตรงนี้
+                            val obj = JSONObject(responseBodyStr)
+                            val token = obj.optString("token", "")
                             val status = obj["status"].toString()
 
                             if (status == "true") {
                                 val userID = obj["userID"].toString().toInt()
                                 val sharedPref = getSharedPreferences("FinLovePrefs", MODE_PRIVATE)
+                                //Save UserID เอาไว้เรียกใช้
                                 sharedPref.edit().putInt("userID", userID).apply()
+                                //Save JWT token เอาไว้เรียกใช้
+                                sharedPref.edit().putString("jwt_token", token).apply()
+
                                 val intent = Intent(this@LoginActivity, MainActivity::class.java)
                                 intent.putExtra("userID", userID)
                                 startActivity(intent)
