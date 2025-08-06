@@ -30,12 +30,32 @@
         app:layout_constraintVertical_bias="0.0"
         app:layout_constraintWidth_percent="1.0" />
 
+    <TextView
+        android:id="@+id/labellist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:shadowColor="@android:color/black"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="10"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="10dp"
+        android:padding="8dp"
+        android:background="@drawable/button_gradient"
+        android:textSize="20sp"
+        android:text="มีคนที่เหมาะกับคุณ: 10คน"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="#FFFFFF" />
+
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginBottom="68dp"
+        android:layout_marginBottom="120dp"
         android:orientation="horizontal"
         android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="@+id/imageProfile"
@@ -57,11 +77,11 @@
             android:id="@+id/textAge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
             android:shadowColor="@android:color/black"
             android:shadowDx="0"
             android:shadowDy="0"
             android:shadowRadius="10"
-            android:layout_marginLeft="10dp"
             android:text="Age"
             android:textColor="@android:color/white"
             android:textSize="48sp" />
@@ -75,6 +95,22 @@
             android:visibility="visible" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/titledistance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:shadowColor="@android:color/black"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="10"
+        android:layout_marginLeft="16dp"
+        android:textSize="24sp"
+        android:text="ห่างจากคุณ:"
+        android:textColor="#fff"
+        app:layout_constraintBottom_toTopOf="@+id/likePreferencesContainer"
+        app:layout_constraintStart_toStartOf="@id/linearLayout2"
+        app:layout_constraintTop_toBottomOf="@id/linearLayout2"/>
 
     <LinearLayout
         android:id="@+id/likePreferencesContainer"
@@ -85,7 +121,7 @@
         android:padding="8dp"
         app:layout_constraintBottom_toTopOf="@+id/buttonGroup"
         app:layout_constraintStart_toStartOf="@id/linearLayout2"
-        app:layout_constraintTop_toBottomOf="@id/linearLayout2">
+        app:layout_constraintTop_toBottomOf="@id/titledistance">
 
 
         <!-- บล็อกที่ 1 -->
@@ -115,6 +151,18 @@
             android:padding="16dp"
             android:text="ชอบอ่านหนังสือ"
             android:textColor="#fff" />
+
+        <TextView
+            android:id="@+id/block3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/button_normal"
+            android:gravity="center"
+            android:padding="16dp"
+            android:textSize="18dp"
+            android:text="+1"
+            android:textColor="#000000" />
     </LinearLayout>
 
     <LinearLayout

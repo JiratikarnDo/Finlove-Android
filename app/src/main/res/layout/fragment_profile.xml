@@ -165,40 +165,73 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
 
+        <TextView
+            android:id="@+id/labelUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="ชื่อผู้ใช้:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/textViewUsername"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/textViewUsername"
+            app:layout_constraintTop_toBottomOf="@+id/buttonEditProfile" />
+
         <!-- Username -->
+
+
+        <!-- Email -->
         <EditText
             android:id="@+id/textViewUsername"
-            android:layout_width="300dp"
+            android:layout_width="220dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:enabled="true"
             android:hint="Username: "
             android:padding="12dp"
             android:textColor="#000000"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.69"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textViewNickname" />
 
-
-        <!-- Email -->
-        <EditText
-            android:id="@+id/textViewEmail"
-            android:layout_width="300dp"
+        <TextView
+            android:id="@+id/labelEmail"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:enabled="true"
-            android:padding="12dp"
-            android:hint="Email: "
-            android:textColor="#000000"
-            android:textSize="18sp"
-            app:layout_constraintTop_toBottomOf="@id/textViewUsername"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="อีเมล:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/textViewEmail"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/textViewEmail"
+            app:layout_constraintTop_toBottomOf="@+id/labelUsername" />
 
         <!-- First Name -->
 
         <!-- Last Name -->
+
+        <EditText
+            android:id="@+id/textViewEmail"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:enabled="true"
+            android:hint="Email: "
+            android:padding="12dp"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/textViewUsername"
+            app:layout_constraintTop_toBottomOf="@id/textViewUsername" />
 
         <TextView
             android:id="@+id/labelFirstName"
@@ -294,6 +327,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textViewLastName" />
 
+        <TextView
+            android:id="@+id/labelGender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="เพศ:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/spinnerGender"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/spinnerGender"
+            app:layout_constraintTop_toBottomOf="@+id/labelNickName" />
+
         <Spinner
             android:id="@+id/spinnerGender"
             android:layout_width="220dp"
@@ -325,83 +373,180 @@
             android:layout_marginTop="8dp"
             android:text="แก้ไขความชอบของคุณ"
             android:visibility="gone"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             android:textStyle="bold"
-            android:background="@drawable/button"
+            android:background="@drawable/button_normal"
             app:layout_constraintTop_toBottomOf="@id/preferenceContainer"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Education Spinner -->
+
+        <TextView
+            android:id="@+id/labelEducation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="การศึกษา:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/spinnerEducation"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/spinnerEducation"
+            app:layout_constraintTop_toBottomOf="@+id/buttonEditPreferences" />
+
         <Spinner
             android:id="@+id/spinnerEducation"
-            android:layout_width="300dp"
+            android:layout_width="220dp"
             android:layout_height="50dp"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/buttonEditPreferences"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_marginTop="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/spinnerGender"
+            app:layout_constraintTop_toBottomOf="@id/buttonEditPreferences" />
 
-        <!-- Goal Spinner -->
+        <TextView
+            android:id="@+id/labelGoal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="เป้าหมาย:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/spinnerGoal"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/spinnerGoal"
+            app:layout_constraintTop_toBottomOf="@+id/labelEducation" />
+
+        <!-- Height -->
+
         <Spinner
             android:id="@+id/spinnerGoal"
-            android:layout_width="300dp"
+            android:layout_width="220dp"
             android:layout_height="50dp"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/spinnerEducation"
+            android:layout_marginTop="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.675"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-        <!-- Height -->
-        <EditText
-            android:id="@+id/textViewHeight"
-            android:layout_width="300dp"
+            app:layout_constraintTop_toBottomOf="@id/spinnerEducation" />
+
+        <TextView
+            android:id="@+id/labelHeight"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Height"
-            android:focusable="false"
-            android:focusableInTouchMode="false"
-            android:padding="12dp"
-            app:layout_constraintTop_toBottomOf="@id/spinnerGoal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="ส่วนสูง:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/textViewHeight"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/textViewHeight"
+            app:layout_constraintTop_toBottomOf="@+id/spinnerEducation" />
 
         <!-- Home -->
         <EditText
-            android:id="@+id/textViewHome"
-            android:layout_width="300dp"
+            android:id="@+id/textViewHeight"
+            android:layout_width="220dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Home"
+            android:layout_marginTop="20dp"
             android:focusable="false"
             android:focusableInTouchMode="false"
+            android:hint="Height"
             android:padding="12dp"
-            app:layout_constraintTop_toBottomOf="@id/textViewHeight"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.675"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/spinnerGoal" />
+
+        <TextView
+            android:id="@+id/labelHome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="ที่อยู่:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/textViewHome"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/textViewHome"
+            app:layout_constraintTop_toBottomOf="@+id/spinnerGoal" />
 
 
         <!-- Interest Gender Spinner -->
-        <Spinner
-            android:id="@+id/spinnerInterestGender"
-            android:layout_width="300dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/textViewHome"
+        <EditText
+            android:id="@+id/textViewHome"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:hint="Home"
+            android:padding="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.684"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/textViewHeight" />
+
+        <TextView
+            android:id="@+id/labelInterest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="สนใจเพศ:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/spinnerInterestGender"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/spinnerInterestGender"
+            app:layout_constraintTop_toBottomOf="@+id/textViewHeight" />
 
         <!-- Date of Birth Button -->
+        <Spinner
+            android:id="@+id/spinnerInterestGender"
+            android:layout_width="220dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.697"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textViewHome" />
+
+        <TextView
+            android:id="@+id/labelDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="วัน/เดือน/ปี:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/buttonSelectDateProfile"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/buttonSelectDateProfile"
+            app:layout_constraintTop_toBottomOf="@+id/buttonSelectDateProfile" />
+
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/buttonSelectDateProfile"
-            android:layout_width="250dp"
+            android:layout_width="200dp"
             android:layout_height="55dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/edittext"
             android:text="เลือก วัน/เดือน/ปีเกิด"
             android:textAlignment="center"
             app:layout_constraintTop_toBottomOf="@id/spinnerInterestGender"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintStart_toStartOf="@id/spinnerInterestGender"
+            app:layout_constraintEnd_toEndOf="@id/spinnerInterestGender" />
 
         <!-- Save Button -->
         <androidx.appcompat.widget.AppCompatButton

@@ -10,9 +10,9 @@
       <string name="root_url2">https://fin-love.com</string>
 
   <!-    สำหรับ manual ip ครับ-->
-    <string name="root_url">http://10.13.4.31:8501</string>
-    <string name="root_url2">http://10.13.4.31:6502</string>
-    <string name="root_url3">http://10.13.4.31:6501</string>
+    <string name="root_url">http://192.168.1.35:8501</string>
+    <string name="root_url2">http://192.168.1.35:6502</string>
+    <string name="root_url3">http://192.168.1.35:6501</string>
 
 
     <string-array name="education_levels">
@@ -47,12 +47,23 @@
         <item>ออกกำลังกาย</item>
     </string-array>
 
+
+    <string-array name="gender_display_array">
+        <item>ชาย</item>
+        <item>หญิง</item>
+        <item>อื่น ๆ</item>
+    </string-array>
     <string-array name="gender_array">
         <item>Male</item>
         <item>Female</item>
         <item>Other</item>
     </string-array>
 
+    <string-array name="interest_gender_display_array">
+        <item>ชาย</item>
+        <item>หญิง</item>
+        <item>อื่น ๆ</item>
+    </string-array>
     <string-array name="interest_gender_array">
         <item>Male</item>
         <item>Female</item>

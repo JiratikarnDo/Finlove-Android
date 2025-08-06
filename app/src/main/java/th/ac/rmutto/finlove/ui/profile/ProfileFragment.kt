@@ -51,6 +51,14 @@ class ProfileFragment : Fragment() {
     private lateinit var spinnerGoal: Spinner
     private lateinit var preferenceContainer: LinearLayout
     private lateinit var verifyBadge: ImageView
+    private lateinit var labelUsername: TextView
+    private lateinit var labelEmail: TextView
+    private lateinit var labelEducation: TextView
+    private lateinit var labelGoal: TextView
+    private lateinit var labelHeight: TextView
+    private lateinit var labelHome: TextView
+    private lateinit var labelInterest: TextView
+    private lateinit var labelDate: TextView
 
     private lateinit var user: User // ประกาศตัวแปร user ที่คลาส level
 
@@ -102,6 +110,14 @@ class ProfileFragment : Fragment() {
         spinnerInterestGender = root.findViewById(R.id.spinnerInterestGender)
         textViewHeight = root.findViewById(R.id.textViewHeight)
         textViewHome = root.findViewById(R.id.textViewHome)
+        labelUsername = root.findViewById(R.id.labelUsername)
+        labelEmail = root.findViewById(R.id.labelEmail)
+        labelEducation = root.findViewById(R.id.labelEducation)
+        labelGoal = root.findViewById(R.id.labelGoal)
+        labelHeight = root.findViewById(R.id.labelHeight)
+        labelHome = root.findViewById(R.id.labelHome)
+        labelInterest = root.findViewById(R.id.labelInterest)
+        labelDate = root.findViewById(R.id.labelDate)
         buttonSelectDateProfile = root.findViewById(R.id.buttonSelectDateProfile)
         imageViewProfile = root.findViewById(R.id.imageViewProfile)
         spinnerEducation = root.findViewById(R.id.spinnerEducation)
@@ -183,19 +199,13 @@ class ProfileFragment : Fragment() {
         goalAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGoal.adapter = goalAdapter
 
-        val genderAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.gender_array,
-            android.R.layout.simple_spinner_item
-        )
+        val genderDisplay = resources.getStringArray(R.array.gender_display_array)
+        val genderAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, genderDisplay)
         genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGender.adapter = genderAdapter
 
-        val interestGenderAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.interest_gender_array,
-            android.R.layout.simple_spinner_item
-        )
+        val interestGenderDisplay = resources.getStringArray(R.array.interest_gender_display_array)
+        val interestGenderAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, interestGenderDisplay)
         interestGenderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerInterestGender.adapter = interestGenderAdapter
     }
@@ -308,7 +318,8 @@ class ProfileFragment : Fragment() {
 
         loadPreferences(user.preferences)
 
-        val genderIndex = resources.getStringArray(R.array.gender_array).indexOf(user.gender)
+        val genderValueArray = resources.getStringArray(R.array.gender_array) // อ่าน array ภาษาอังกฤษครั้งเดียว
+        val genderIndex = genderValueArray.indexOf(user.gender) // user.gender เช่น "Male" "Female" "Other"
         if (genderIndex >= 0) {
             spinnerGender.setSelection(genderIndex)
         }
@@ -323,10 +334,12 @@ class ProfileFragment : Fragment() {
             spinnerGoal.setSelection(goalIndex)
         }
 
-        val interestGenderIndex = resources.getStringArray(R.array.interest_gender_array).indexOf(user.interestGender)
+        val interestGenderValueArray = resources.getStringArray(R.array.interest_gender_array)
+        val interestGenderIndex = interestGenderValueArray.indexOf(user.interestGender)
         if (interestGenderIndex >= 0) {
             spinnerInterestGender.setSelection(interestGenderIndex)
         }
+
 
         user.imageFile?.let { loadImage(it, imageViewProfile) }
     }
@@ -345,8 +358,13 @@ class ProfileFragment : Fragment() {
             try {
                 val client = OkHttpClient()
 
-                val selectedGender = spinnerGender.selectedItem.toString()
-                val selectedInterestGender = spinnerInterestGender.selectedItem.toString()
+
+                // ใช้ gender_value_array แทน selected text ตรงๆ
+                val genderValueArray = resources.getStringArray(R.array.gender_array)
+                val selectedGender = genderValueArray[spinnerGender.selectedItemPosition]
+
+                val interestGenderValueArray = resources.getStringArray(R.array.interest_gender_array)
+                val selectedInterestGender = interestGenderValueArray[spinnerInterestGender.selectedItemPosition]
                 val selectedEducation = spinnerEducation.selectedItem.toString()
                 val selectedGoal = spinnerGoal.selectedItem.toString()
 
@@ -465,6 +483,14 @@ class ProfileFragment : Fragment() {
     private fun showAllFields() {
         spinnerInterestGender.visibility = View.VISIBLE
         textViewUsername.visibility = View.VISIBLE
+        labelUsername.visibility = View.VISIBLE
+        labelEmail.visibility = View.VISIBLE
+        labelEducation.visibility = View.VISIBLE
+        labelGoal.visibility = View.VISIBLE
+        labelHeight.visibility = View.VISIBLE
+        labelHome.visibility = View.VISIBLE
+        labelInterest.visibility = View.VISIBLE
+        labelDate.visibility = View.VISIBLE
         textViewEmail.visibility = View.VISIBLE
         textViewHeight.visibility = View.VISIBLE
         textViewHome.visibility = View.VISIBLE
@@ -476,6 +502,14 @@ class ProfileFragment : Fragment() {
     private fun hideFieldsForViewingMode() {
         textViewUsername.visibility = View.GONE
         textViewEmail.visibility = View.GONE
+        labelUsername.visibility = View.GONE
+        labelEmail.visibility = View.GONE
+        labelEducation.visibility = View.GONE
+        labelGoal.visibility = View.GONE
+        labelHeight.visibility = View.GONE
+        labelHome.visibility = View.GONE
+        labelInterest.visibility = View.GONE
+        labelDate.visibility = View.GONE
         textViewHeight.visibility = View.GONE
         textViewHome.visibility = View.GONE
         buttonSelectDateProfile.visibility = View.GONE

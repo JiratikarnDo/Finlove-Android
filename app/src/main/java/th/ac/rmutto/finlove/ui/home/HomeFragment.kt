@@ -96,6 +96,7 @@ class HomeFragment : Fragment() {
         Log.d("HomeFragment", "selectedUserID = $selectedUserID")
 
         checkAndRequestLocationPermission()
+        recentlyDisliked.clear()
 
         // กู้คืน currentIndex หากมีการบันทึกไว้
         if (selectedUserID != -1) {
@@ -256,8 +257,8 @@ class HomeFragment : Fragment() {
         })
     }
 
-
-
+    private var myLat: Double? = null
+    private var myLng: Double? = null
 
     private fun getCurrentLocation() {
         if (!hasLocationPermission()) {
@@ -270,6 +271,10 @@ class HomeFragment : Fragment() {
                 if (location != null) {
                     val lat = location.latitude
                     val lng = location.longitude
+                    // เพิ่มตรงนี้!
+                    myLat = lat
+                    myLng = lng
+                    // -----
                     Log.d("GPS", "📍 พิกัด Latitude: $lat, Longitude: $lng")
                     sendLocationToServer(lat, lng) // <-- เพิ่มตรงนี้ เพื่อส่งพิกัดไปเซิร์ฟเวอร์
                 } else {
@@ -282,10 +287,10 @@ class HomeFragment : Fragment() {
     }
 
 
-
     // ฟังก์ชันแสดงผู้ใช้จากตำแหน่ง currentIndex
     private fun displayUser(index: Int) {
-        if (index >= users.size) {
+        if (index >= users.size || users.isEmpty()) {
+            binding.userListLayout.removeAllViews() // <-- เพิ่มบรรทัดนี้!
             Toast.makeText(requireContext(), "ไม่มีผู้ใช้อีกแล้ว", Toast.LENGTH_SHORT).show()
             return
         }
@@ -307,6 +312,7 @@ class HomeFragment : Fragment() {
         ageTextView.text = if (age >= 0) "$age ปี" else "ไม่ทราบอายุ"
         val likeButton: ImageButton = userView.findViewById(R.id.buttonLike)
         val dislikeButton: ImageButton = userView.findViewById(R.id.buttonDislike)
+        val labellist: TextView = userView.findViewById((R.id.labellist))
 
 
         // ดึงขนาดจริงของ ImageView (ถ้ายังไม่ได้ layout ให้ใช้ fallback เป็นขนาดหน้าจอ)
@@ -316,11 +322,16 @@ class HomeFragment : Fragment() {
 
         nickname.text = user.nickname
         // ปรับ performance ให้โหลดภาพไวขึ้น
+        val thumbRequest = Glide.with(requireContext())
+            .load(user.profilePicture)
+            .override(width / 5, height / 5) // ปรับขนาด thumbnail ให้เล็กลง
+
         Glide.with(requireContext())
             .load(user.profilePicture)
-            // ตัดรูปให้พอดีขนาด ImageView
-            .override(width, height) // กำหนดขนาดรูป ลดขนาดภาพให้เหมาะสม (แก้ช้าเพราะโหลดรูปใหญ่)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)  // เก็บ cache ทั้ง original และรูปที่แปลงแล้ว
+            .override(width / 2, height / 2)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+            .thumbnail(thumbRequest)
             .into(profileImage)
 
 
@@ -329,6 +340,37 @@ class HomeFragment : Fragment() {
             verifiedIcon.visibility = View.VISIBLE
         } else {
             verifiedIcon.visibility = View.GONE
+        }
+
+        val blockIds = listOf(R.id.block1, R.id.block2, /* ... */ R.id.block3)
+        for ((i, id) in blockIds.withIndex()) {
+            val tv = userView.findViewById<TextView>(id)
+            if (i < user.preferences.size) {
+                Log.d("TestPref", "preferences size = ${user.preferences.size}, data = ${user.preferences}")
+                Log.d("BindPref", "block $i = ${user.preferences[i]}")
+                tv.text = user.preferences[i]
+                tv.visibility = View.VISIBLE
+            } else {
+                tv.visibility = View.GONE
+            }
+            if (index >= users.size || users.isEmpty()) {
+                binding.userListLayout.removeAllViews()
+                labellist.text = "ไม่มีผู้ใช้ที่แนะนำ"
+                Toast.makeText(requireContext(), "ไม่มีผู้ใช้อีกแล้ว", Toast.LENGTH_SHORT).show()
+                return
+            }
+           labellist.text = "มีคนที่เหมาะกับคุณ: ${users.size} คน"
+
+            val titledistance: TextView = userView.findViewById(R.id.titledistance)
+
+            if (myLat != null && myLng != null && user.latitude != null && user.longitude != null) {
+                val distanceKm = calculateDistance(myLat!!, myLng!!, user.latitude!!, user.longitude!!) / 1000
+                titledistance.text = String.format("ห่าง %.2f กม.", distanceKm)
+                titledistance.visibility = View.VISIBLE
+            } else {
+                titledistance.text = "ไม่ทราบระยะทาง"
+                titledistance.visibility = View.VISIBLE
+            }
         }
 
         // เมื่อกดปุ่ม "Like"
@@ -340,10 +382,10 @@ class HomeFragment : Fragment() {
 
         // เมื่อกดปุ่ม "Dislike"
         dislikeButton.setOnClickListener {
-            AnimationHelper.animateButtonPressBounceRotate(it as ImageButton) {
+           AnimationHelper.animateButtonPressBounceRotate(it as ImageButton) {
                     dislikeUser(user.userID)
             }
-        }
+      }
 
         // เพิ่ม View ที่สร้างขึ้นใหม่ไปยัง LinearLayout
         userListLayout.addView(userView)
@@ -362,6 +404,12 @@ class HomeFragment : Fragment() {
             confirmReport(reportedID, reportType)
         }
         builder.create().show()
+    }
+
+    private fun calculateDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Float {
+        val results = FloatArray(1)
+        Location.distanceBetween(lat1, lng1, lat2, lng2, results)
+        return results[0] // หน่วย: เมตร
     }
 
 
@@ -407,12 +455,10 @@ class HomeFragment : Fragment() {
 
     // ฟังก์ชันไปยังผู้ใช้คนถัดไป
     private fun nextUser() {
-        if (users.isEmpty()) {
-            showNoMoreUsersDialog()
-            return
+        currentIndex++
+        if (currentIndex >= users.size) {
+            currentIndex = 0 // วนกลับไปผู้ใช้คนแรก
         }
-
-        currentIndex = currentIndex % users.size
         displayUser(currentIndex)
     }
 
@@ -434,20 +480,8 @@ class HomeFragment : Fragment() {
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 requireActivity().runOnUiThread {
                     if (response.isSuccessful) {
-                        // 🔴 ลบผู้ใช้ที่กด like ออกไปเลย
-                        users = users.filterNot { it.userID == likedID }
-
-                        // ✅ ถ้าเข้ามาจาก WhoLikeFragment
-                        if (selectedUserID != -1) {
-                            selectedUserID = -1  // เคลียร์เพื่อไม่ให้ล็อกอีก
-                            fetchRecommendedUsers { fetchedUsers ->
-                                users = fetchedUsers
-                                currentIndex = 0
-                                displayUser(currentIndex)
-                            }
-                        } else {
-                            checkMatch(likedID)
-                        }
+                        // ไม่ต้องเช็ค selectedUserID ตรงนี้
+                        checkMatch(likedID)
                     } else {
                         Toast.makeText(requireContext(), "Error: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
@@ -456,6 +490,7 @@ class HomeFragment : Fragment() {
         })
     }
 
+    // ฟังก์ชันตรวจสอบการ Match
     // ฟังก์ชันตรวจสอบการ Match
     private fun checkMatch(likedID: Int) {
         val url = getString(R.string.root_url) + "/api_v2/check_match"
@@ -479,7 +514,17 @@ class HomeFragment : Fragment() {
                     if (isMatch) {
                         showMatchPopup()
                     } else {
-                        nextUser()
+                        // ถ้ามาจาก selectedUserID (กรณีเปิดจาก WhoLike)
+                        if (selectedUserID != -1) {
+                            selectedUserID = -1
+                            fetchRecommendedUsers { fetchedUsers ->
+                                users = fetchedUsers
+                                currentIndex = 0
+                                displayUser(currentIndex)
+                            }
+                        } else {
+                            removeAndShowNextUser(currentIndex)
+                        }
                     }
                 }
             }
@@ -500,6 +545,44 @@ class HomeFragment : Fragment() {
         dialog.show()
     }
 
+    private val recentlyDisliked = mutableSetOf<Int>()
+
+    // ฟังก์ชันสำหรับการกด "Dislike"
+//    private fun dislikeUser(dislikedID: Int) {
+//        val url = getString(R.string.root_url) + "/api_v2/dislike"
+//        val formBody = FormBody.Builder()
+//            .add("dislikerID", userID.toString())
+//            .add("dislikedID", dislikedID.toString())
+//            .build()
+//
+//        client.newCall(Request.Builder().url(url).post(formBody).build()).enqueue(object : okhttp3.Callback {
+//            override fun onFailure(call: okhttp3.Call, e: IOException) {
+//                requireActivity().runOnUiThread {
+//                    Toast.makeText(requireContext(), "Failed to dislike user", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//
+//            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+//                requireActivity().runOnUiThread {
+//                    if (response.isSuccessful) {
+//                        if (selectedUserID != -1) {
+//                            selectedUserID = -1
+//                            fetchRecommendedUsers { fetchedUsers ->
+//                                users = fetchedUsers
+//                                currentIndex = 0
+//                                displayUser(currentIndex)
+//                            }
+//                        } else {
+//                            // <-- ปรับมาใช้แบบนี้ -->
+//                            removeAndShowNextUser(currentIndex)
+//                        }
+//                    } else {
+//                        Toast.makeText(requireContext(), "Error: ${response.message}", Toast.LENGTH_SHORT).show()
+//                    }
+//                }
+//            }
+//        })
+//    }
 
     // ฟังก์ชันสำหรับการกด "Dislike"
     private fun dislikeUser(dislikedID: Int) {
@@ -519,20 +602,7 @@ class HomeFragment : Fragment() {
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 requireActivity().runOnUiThread {
                     if (response.isSuccessful) {
-                        // 🔴 ลบผู้ใช้ที่ dislike ออกไปเลย
-                        users = users.filterNot { it.userID == dislikedID }
-
-                        // ✅ ถ้ามาจาก WhoLikeFragment (selectedUserID ถูกกำหนด)
-                        if (selectedUserID != -1) {
-                            selectedUserID = -1  // เคลียร์ flag
-                            fetchRecommendedUsers { fetchedUsers ->
-                                users = fetchedUsers
-                                currentIndex = 0
-                                displayUser(currentIndex)
-                            }
-                        } else {
-                            nextUser()
-                        }
+                        removeAndShowNextUser(currentIndex)
                     } else {
                         Toast.makeText(requireContext(), "Error: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
@@ -540,6 +610,7 @@ class HomeFragment : Fragment() {
             }
         })
     }
+
 
     private fun fetchUserByID(targetUserID: Int, callback: (User?) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -571,12 +642,23 @@ class HomeFragment : Fragment() {
                         baseImageUrl + imageFile
                     }
 
+                    // 👉 เพิ่มส่วนนี้เพื่ออ่าน preferences (array)
+                    val prefsJsonArray = jsonObject.optJSONArray("preferences")
+                    val prefsList = mutableListOf<String>()
+                    if (prefsJsonArray != null) {
+                        for (j in 0 until prefsJsonArray.length()) {
+                            prefsList.add(prefsJsonArray.getString(j))
+                        }
+                    }
+
+
                     val user = User(
                         jsonObject.getInt("userID"),
                         jsonObject.getString("nickname"),
                         profilePicture,
                         jsonObject.optString("DateBirth", ""),
-                        jsonObject.getInt("verify")
+                        jsonObject.getInt("verify"),
+                        prefsList,  // <-- ส่ง prefs เข้า data class ด้วย
                     )
 
 
@@ -624,6 +706,41 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun removeAndShowNextUser(removeIndex: Int) {
+        val userList = users.toMutableList()
+        Log.d("REMOVE", "ก่อน remove: users=${userList.map { it.userID }}, currentIndex=$currentIndex, removeIndex=$removeIndex")
+        if (removeIndex in userList.indices) {
+            recentlyDisliked.add(userList[removeIndex].userID)
+            Log.d("REMOVE", "กำลัง remove userID=${userList[removeIndex].userID}")
+            userList.removeAt(removeIndex)
+        }
+        users = userList
+        Log.d("REMOVE", "หลัง remove: users=${users.map { it.userID }}, currentIndex=$currentIndex")
+        if (currentIndex >= users.size) {
+            currentIndex = 0
+            Log.d("REMOVE", "currentIndex reset to 0")
+        }
+        if (users.isEmpty()) {
+            Log.d("REMOVE", "users ว่าง! fetchRecommendedUsers ใหม่")
+            fetchRecommendedUsers { fetchedUsers ->
+                var filteredUsers = fetchedUsers.filter { it.userID !in recentlyDisliked }
+                Log.d("REMOVE", "หลัง fetch: users=${filteredUsers.map { it.userID }}")
+                if (filteredUsers.isEmpty()) {
+                    Log.d("REMOVE", "No user left after filter")
+                     showNoMoreUsersDialog()
+                    return@fetchRecommendedUsers
+                }
+                users = filteredUsers
+                currentIndex = 0
+                displayUser(currentIndex)
+            }
+        } else {
+            displayUser(currentIndex)
+        }
+    }
+
+
+
     // แปลงข้อมูล JSON ที่ได้จาก API เป็นรายการผู้ใช้
     private fun parseUsers(responseBody: String?): List<User> {
         val users = mutableListOf<User>()
@@ -632,6 +749,13 @@ class HomeFragment : Fragment() {
             for (i in 0 until jsonArray.length()) {
                 val jsonObject = jsonArray.getJSONObject(i)
                 val imageFile = jsonObject.getString("imageFile")
+                val prefsJsonArray = jsonObject.optJSONArray("preferences")
+                val prefsList = mutableListOf<String>()
+                if (prefsJsonArray != null) {
+                    for (j in 0 until prefsJsonArray.length()) {
+                        prefsList.add(prefsJsonArray.getString(j))
+                    }
+                }
                 Log.d("parseUsers", "User $i imageFile: $imageFile")  // เพิ่มบรรทัดนี้
 
                 val user = User(
@@ -639,7 +763,12 @@ class HomeFragment : Fragment() {
                     jsonObject.getString("nickname"),
                     jsonObject.getString("imageFile"),
                     jsonObject.optString("dateBirth", ""),
-                    jsonObject.getInt("verify")
+                    jsonObject.getInt("verify"),
+                    prefsList, // เพิ่มตรงนี้
+                    jsonObject.optDouble("latitude"),     // <-- เพิ่ม!
+                    jsonObject.optDouble("longitude")
+
+
                 )
                 users.add(user)
             }
@@ -647,17 +776,25 @@ class HomeFragment : Fragment() {
         return users
     }
 
+    private var isDialogShowing = false
+
     private fun showNoMoreUsersDialog() {
+        if (isDialogShowing) return
+        isDialogShowing = true
         AlertDialog.Builder(requireContext())
-            .setTitle("หมดแล้ว 🎉")
-            .setMessage("คุณได้ดูผู้ใช้ที่แนะนำครบทั้งหมดแล้ว")
-            .setPositiveButton("ตกลง") { dialog, _ -> dialog.dismiss() }
+            .setTitle("ผู้ใช้ที่เหมาะกับคุณหมดแล้ว")
+            .setMessage("คุณสามารถเพิ่มขอบเขตระยะทางการค้นหา เพื่อหาคนใหม่ๆได้")
+            .setPositiveButton("ตกลง") { dialog, _ ->
+                dialog.dismiss()
+                isDialogShowing = false
+            }
             .show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        recentlyDisliked.clear() // ลืม user ที่ dislike ไป
     }
 }
 
@@ -666,7 +803,10 @@ data class User(
     val userID: Int,
     val nickname: String,
     val profilePicture: String,
-    val dateBirth: String ,// รูปแบบ yyyy-MM-dd
-    val verify: Int // ฟิลด์สำหรับสถานะการยืนยัน
+    val dateBirth: String,
+    val verify: Int,
+    val preferences: List<String> = emptyList(), // ← เพิ่มตรงนี้
+    val latitude: Double? = null,        // เพิ่มตรงนี้
+    val longitude: Double? = null        // เพิ่มตรงนี้
 )
 

@@ -14,7 +14,8 @@ import java.util.*
 
 class WholikeAdapter(
     private val items: List<User>, // หรือ UserLike หากคุณมี UserLike
-    private val onItemClick: (User) -> Unit  // เพิ่ม callback สำหรับคลิก
+    private val onItemClick: (User) -> Unit,  // เพิ่ม callback สำหรับคลิก
+    var itemClickable: Boolean = true  // เพิ่ม flag นี้!
 ) : RecyclerView.Adapter<WholikeAdapter.ViewHolder>() {
 
     // ViewHolder สำหรับการอ้างถึง element ใน layout item
@@ -65,7 +66,15 @@ class WholikeAdapter(
     // เชื่อมโยงข้อมูลจาก List ไปที่ View ในแต่ละ item
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val user = items[position]
-
+        // กำหนด OnClickListener เฉพาะเมื่อคลิกได้
+        holder.itemView.setOnClickListener {
+            if (itemClickable) {
+                onItemClick(user)
+            }
+        }
+        holder.itemView.isEnabled = itemClickable
+        holder.itemView.alpha = if (itemClickable) 1.0f else 0.9f
+        // สามารถเซ็ต visual hint ว่ากดไม่ได้ เช่นลด opacity ก็ได้
         holder.textNickname.text = user.nickname
         holder.imageVerified.visibility = if (user.verify == 1) View.VISIBLE else View.GONE
         holder.textUserid.text = user.id.toString()  // ← ใช้ .id แทน .userID
@@ -90,9 +99,9 @@ class WholikeAdapter(
             .centerCrop()
             .into(holder.imageProfile)
 
-        holder.itemView.setOnClickListener {
-            onItemClick(user)  // เรียก callback ให้ Fragment จัดการ navigation
-        }
+//        holder.itemView.setOnClickListener {
+//            onItemClick(user)  // เรียก callback ให้ Fragment จัดการ navigation
+//        }
     }
 
 

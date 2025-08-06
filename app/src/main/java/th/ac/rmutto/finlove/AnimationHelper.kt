@@ -115,6 +115,36 @@ object AnimationHelper { // ใช้ object เพื่อให้เรี�
         }
     }
 
+    fun animateButtonPressSubtle(button: View, onAnimationEnd: () -> Unit) {
+        val buttonScaleX = ObjectAnimator.ofFloat(button, "scaleX", 1f, 0.95f, 1f)
+        val buttonScaleY = ObjectAnimator.ofFloat(button, "scaleY", 1f, 0.95f, 1f)
+
+        AnimatorSet().apply {
+            playTogether(buttonScaleX, buttonScaleY)
+            duration = 200 // การกดที่ไม่เร็วเกินไป
+            interpolator = AccelerateDecelerateInterpolator() // สร้างการเคลื่อนไหวที่ราบรื่น
+            addListener(object : Animator.AnimatorListener {
+                override fun onAnimationStart(animation: Animator) {
+                    button.isEnabled = false
+                }
+
+                override fun onAnimationEnd(animation: Animator) {
+                    button.isEnabled = true
+                    onAnimationEnd.invoke() // เรียก callback เมื่อแอนิเมชันจบ
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    button.isEnabled = true
+                }
+
+                override fun onAnimationRepeat(animation: Animator) {}
+            })
+            start()
+        }
+    }
+
+
+
     /**
      * Animates a View to fade in and scale up from a smaller size.
      * @param view The View to animate.
@@ -131,7 +161,7 @@ object AnimationHelper { // ใช้ object เพื่อให้เรี�
 
         AnimatorSet().apply {
             playTogether(fadeIn, scaleX, scaleY)
-            duration = 300 // ความเร็วของแอนิเมชัน
+            duration = 350 // ความเร็วของแอนิเมชัน
             interpolator = AccelerateDecelerateInterpolator()
             start()
         }

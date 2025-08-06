@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
 
+
 // เพิ่มไลบรารีสำหรับ Firebase Cloud Messaging
     implementation("com.google.firebase:firebase-messaging")
 

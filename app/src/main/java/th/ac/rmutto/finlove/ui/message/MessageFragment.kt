@@ -272,6 +272,7 @@ class MatchedUserAdapter(
         holder.lastMessage.text = user.lastMessage ?: "ไม่มีข้อความล่าสุด"
         holder.lastInteraction.text = formatTime(user.lastInteraction)
 
+
         // โหลดภาพด้วย Glide โดยมี placeholder และ error image
         Glide.with(holder.profileImage.context)
             .load(user.profilePicture)

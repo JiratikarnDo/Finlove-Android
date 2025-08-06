@@ -33,7 +33,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textViewTitle" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonHighSchool"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewEducation" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonBachelor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -57,7 +57,7 @@
         app:layout_constraintStart_toEndOf="@+id/buttonHighSchool"
         app:layout_constraintTop_toBottomOf="@+id/textViewEducation" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonMaster"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -69,7 +69,7 @@
         app:layout_constraintStart_toEndOf="@+id/buttonBachelor"
         app:layout_constraintTop_toBottomOf="@+id/textViewEducation" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonPhd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -81,7 +81,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonHighSchool" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonWorking"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -133,7 +133,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextHome" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonSelectDate"
         android:layout_width="300dp"
         android:layout_height="55dp"

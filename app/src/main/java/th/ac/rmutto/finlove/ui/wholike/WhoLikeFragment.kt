@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Switch
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
@@ -24,7 +26,12 @@ class WhoLikeFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: WholikeAdapter
+    private lateinit var switchShowLiked: Switch
+    private lateinit var textSwitchTitle: TextView
+    private lateinit var textSwitchSubTitle: TextView
     private val client = OkHttpClient()
+
+    private var showLikedByMe = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,7 +40,26 @@ class WhoLikeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_wholike, container, false)
 
         recyclerView = view.findViewById(R.id.recyclerViewLikes)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        switchShowLiked = view.findViewById(R.id.switchShowLiked)
+        textSwitchTitle = view.findViewById(R.id.titleLikes) // id ตาม layout ของคุณ
+        textSwitchSubTitle = view.findViewById(R.id.subtitleLikes)
+
+        recyclerView.layoutManager = LinearLayoutManager(requireContext(),)
+
+        // ฟัง event สลับ
+        switchShowLiked.setOnCheckedChangeListener { _, isChecked ->
+            showLikedByMe = isChecked
+            if (showLikedByMe) {
+                textSwitchTitle.text = "คนที่คุณกดไลค์" // หรือข้อความที่ต้องการ
+                textSwitchSubTitle.text = "รอหน่อยนะพวกเขาอาจชอบคุณ"
+                fetchUsersILiked()
+            } else {
+                textSwitchTitle.text = "คนที่กดไลค์คุณ" // หรือข้อความที่ต้องการ
+                textSwitchSubTitle.text = "มีคนชอบคุณเยอะเลยลองกดไลค์กลับดูสิ!!"
+                fetchWhoLikeUsers()
+            }
+        }
+
 
         fetchWhoLikeUsers()
 
@@ -112,18 +138,64 @@ class WhoLikeFragment : Fragment() {
                             val filteredUsers = users.filter { it.id !in matchedIDs }
 
                             activity?.runOnUiThread {
-                                adapter = WholikeAdapter(filteredUsers) { clickedUser ->
+                                adapter = WholikeAdapter(filteredUsers, { clickedUser ->
                                     val bundle = Bundle().apply {
                                         putInt("userID", currentUserID)
                                         putInt("selectedUserID", clickedUser.id)
                                     }
                                     findNavController().navigate(R.id.navigation_home, bundle)
-                                }
+                                }, itemClickable = !showLikedByMe) // << เพิ่มตรงนี้!
                                 recyclerView.adapter = adapter
                             }
                         }
                     }
                 })
+            }
+        })
+    }
+
+    private fun fetchUsersILiked() {
+        val sharedPref = requireActivity().getSharedPreferences(
+            "FinLovePrefs",
+            android.content.Context.MODE_PRIVATE
+        )
+        val currentUserID = sharedPref.getInt("userID", -1)
+        if (currentUserID == -1) {
+            Toast.makeText(requireContext(), "กรุณาล็อกอินก่อนใช้งาน", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val url = getString(R.string.root_url) + "/api_v2/likedbyme?userID=$currentUserID"
+        val request = Request.Builder().url(url).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                activity?.runOnUiThread {
+                    Toast.makeText(
+                        requireContext(),
+                        "โหลดข้อมูลไม่สำเร็จ (likedbyme)",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.string()?.let { jsonString ->
+                    Log.d("WhoLikeFragment", "LikedByMe Response: $jsonString")
+                    val gson = Gson()
+                    val listType = object : TypeToken<List<User>>() {}.type
+                    val users: List<User> = gson.fromJson(jsonString, listType)
+                    activity?.runOnUiThread {
+                        adapter = WholikeAdapter(users, { clickedUser ->
+                            val bundle = Bundle().apply {
+                                putInt("userID", currentUserID)
+                                putInt("selectedUserID", clickedUser.id)
+                            }
+                            findNavController().navigate(R.id.navigation_home, bundle)
+                        }, itemClickable = !showLikedByMe) // << เพิ่มตรงนี้!
+                        recyclerView.adapter = adapter
+                    }
+                }
             }
         })
     }
