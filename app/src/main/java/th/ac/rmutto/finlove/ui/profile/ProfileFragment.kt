@@ -33,6 +33,9 @@ import th.ac.rmutto.finlove.FirstPageActivity
 import th.ac.rmutto.finlove.R
 import th.ac.rmutto.finlove.User
 import java.util.*
+import androidx.navigation.fragment.findNavController
+import androidx.appcompat.widget.AppCompatButton
+
 
 class ProfileFragment : Fragment() {
 
@@ -100,6 +103,11 @@ class ProfileFragment : Fragment() {
     }
 
     private fun initializeViews(root: View) {
+
+        val btnRecommend = root.findViewById<AppCompatButton>(R.id.buttonreccomend)
+        btnRecommend.setOnClickListener {
+            findNavController().navigate(R.id.action_profile_to_helpNavigator)
+        }
         // การกำหนดค่าเริ่มต้นสำหรับ Views ต่าง ๆ
         textViewUsername = root.findViewById(R.id.textViewUsername)
         textViewNickname = root.findViewById(R.id.textViewNickname)
@@ -238,7 +246,7 @@ class ProfileFragment : Fragment() {
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == AppCompatActivity.RESULT_OK && data != null && data.data != null) {
             selectedImageUri = data.data
             Glide.with(this)
-                .load(user.imageFile) // URL ควรมาจาก server
+                .load(selectedImageUri) // URL ควรมาจาก server
                 .placeholder(R.drawable.img_1)
                 .error(R.drawable.error)
                 .into(imageViewProfile)

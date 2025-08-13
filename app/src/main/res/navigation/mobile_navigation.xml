@@ -26,7 +26,12 @@
         android:id="@+id/navigation_profile"
         android:name="th.ac.rmutto.finlove.ui.profile.ProfileFragment"
         android:label="Profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile" >
+
+    <action
+        android:id="@+id/action_profile_to_helpNavigator"
+        app:destination="@id/helpNavigatorFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/settingsFragment"
@@ -44,6 +49,13 @@
         android:id="@+id/datingPlaceFragment"
         android:name="th.ac.rmutto.finlove.ui.Dateing.DatingPlaceFragment"
         android:label="แนะนำสถานที่ออกเดต" />
+
+    <fragment
+        android:id="@+id/helpNavigatorFragment"
+        android:name="th.ac.rmutto.finlove.ui.help.HelpNavigatorFragment"
+        android:label="แนะนำแก้ไขโปรไฟล์"
+        tools:layout="@layout/fragment_reccomendprofile" />
+
 
 
 </navigation>

@@ -10,4 +10,6 @@
     <color name="pink">#FF4B88</color>
     <color name="blue">#0000FF</color>
     <color name="blue_main">#0DD7E9</color>
+    <color name="bubble_fill">#FFFFFFFF</color>
+    <color name="bubble_stroke">#26000000</color> <!-- เทาโปร่ง ~15% -->
 </resources>

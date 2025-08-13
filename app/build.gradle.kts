@@ -51,6 +51,12 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
 
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")          // ถ้าใช้ API
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
+
 
 // เพิ่มไลบรารีสำหรับ Firebase Cloud Messaging
     implementation("com.google.firebase:firebase-messaging")

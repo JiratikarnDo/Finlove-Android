@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="finlove">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-24T07:09:13.651991200Z">
+        <DropdownSelection timestamp="2025-08-07T14:21:49.946875200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Acer\.android\avd\Pixel_9_Pro_XL.avd" />

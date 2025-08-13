@@ -9,6 +9,11 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageButton
 import th.ac.rmutto.finlove.R // ตรวจสอบให้แน่ใจว่า import R ถูกต้อง
 import android.view.animation.BounceInterpolator
+import android.animation.ValueAnimator
+import android.view.animation.LinearInterpolator
+import android.widget.ImageView
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 
 object AnimationHelper { // ใช้ object เพื่อให้เรียกใช้ได้โดยตรง ไม่ต้องสร้าง instance
 
@@ -164,6 +169,66 @@ object AnimationHelper { // ใช้ object เพื่อให้เรี�
             duration = 350 // ความเร็วของแอนิเมชัน
             interpolator = AccelerateDecelerateInterpolator()
             start()
+        }
+    }
+    /** สร้างชุดอนิเมชัน “ขยับเบา ๆ” สำหรับมาสคอต แต่ยังไม่ start */
+    fun mascotIdle(
+        target: View,
+        amplitudeY: Float = 16f,      // เด้งขึ้นลงแค่ไหน (dp → px ถ้าต้องการละเอียดค่อยแปลง)
+        rotationDeg: Float = 2.5f,    // แกว่งซ้ายขวา
+        scaleMax: Float = 1.03f       // หายใจ นิด ๆ
+    ): AnimatorSet {
+        val bob = ObjectAnimator.ofFloat(target, View.TRANSLATION_Y, 0f, -amplitudeY).apply {
+            duration = 1400
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+        val sway = ObjectAnimator.ofFloat(target, View.ROTATION, -rotationDeg, rotationDeg).apply {
+            duration = 1600
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+        val breatheX = ObjectAnimator.ofFloat(target, View.SCALE_X, 1f, scaleMax, 1f).apply {
+            duration = 2400
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = LinearInterpolator()
+        }
+        val breatheY = ObjectAnimator.ofFloat(target, View.SCALE_Y, 1f, scaleMax, 1f).apply {
+            duration = 2400
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = LinearInterpolator()
+        }
+        return AnimatorSet().apply { playTogether(bob, sway, breatheX, breatheY) }
+    }
+
+    /** แนบอนิเมชันกับ lifecycle ของ Fragment/Activity ให้ start/stop อัตโนมัติ */
+    fun attachMascotIdle(owner: LifecycleOwner, target: ImageView): AnimatorSet {
+        val set = mascotIdle(target)
+        owner.lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) { set.start() }
+            override fun onStop(owner: LifecycleOwner) { stopAndReset(target, set) }
+        })
+        return set
+    }
+
+    /** ปุ่มเด้งสั้น ๆ เวลาแตะ */
+    fun boing(target: View, scale: Float = 1.08f, upMs: Long = 160, downMs: Long = 180) {
+        target.animate()
+            .setDuration(upMs)
+            .scaleX(scale).scaleY(scale)
+            .withEndAction {
+                target.animate().setDuration(downMs).scaleX(1f).scaleY(1f).start()
+            }.start()
+    }
+
+    /** ยกเลิกและรีเซ็ตค่าทรานส์ฟอร์ม */
+    fun stopAndReset(target: View, animator: Animator?) {
+        animator?.cancel()
+        target.apply {
+            translationX = 0f; translationY = 0f
+            rotation = 0f; scaleX = 1f; scaleY = 1f
         }
     }
 }
