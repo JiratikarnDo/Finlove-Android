@@ -12,4 +12,5 @@
     <color name="blue_main">#0DD7E9</color>
     <color name="bubble_fill">#FFFFFFFF</color>
     <color name="bubble_stroke">#26000000</color> <!-- เทาโปร่ง ~15% -->
+    <color name="link_blue">#3A3A3C</color>
 </resources>

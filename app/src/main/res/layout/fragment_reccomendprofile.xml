@@ -63,6 +63,21 @@
     app:layout_constraintStart_toStartOf="@id/txtDescription"
     app:layout_constraintEnd_toStartOf="@id/imgMascot" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvResult"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="16dp"
+        android:clipToPadding="false"
+        android:layout_marginTop="20dp"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@id/txtDescription"
+        app:layout_constraintStart_toStartOf="@id/txtDescription"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnHelpNow" />
+
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnHelpNow"
         android:layout_width="350dp"

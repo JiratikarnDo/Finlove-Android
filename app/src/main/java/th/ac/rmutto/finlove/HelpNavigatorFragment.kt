@@ -1,4 +1,4 @@
-package th.ac.rmutto.finlove.ui.help   // <-- ปรับให้ตรงโฟลเดอร์/แพ็กเกจจริง
+package th.ac.rmutto.finlove.ui.help
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,18 +7,21 @@ import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.widget.TextSwitcher
 import android.widget.TextView
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels        // <-- สำคัญ
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import android.animation.AnimatorSet
-import android.widget.ImageView
+import th.ac.rmutto.finlove.R
+import th.ac.rmutto.finlove.HelpNavigatorViewModel
+import th.ac.rmutto.finlove.UiState        // <<<<<<<<<< สำคัญ: import UiState
 import th.ac.rmutto.finlove.utils.AnimationHelper
-import th.ac.rmutto.finlove.R               // <-- ใช้ R ของแอป
-import th.ac.rmutto.finlove.HelpNavigatorViewModel  // <-- ปรับ path ให้ตรงไฟล์จริง
-
+import androidx.recyclerview.widget.RecyclerView
+import androidx.core.view.isVisible
+import androidx.core.view.isInvisible
 
 class HelpNavigatorFragment : Fragment() {
 
@@ -26,6 +29,10 @@ class HelpNavigatorFragment : Fragment() {
 
     private lateinit var txtQuestion: TextSwitcher
     private lateinit var imgMascot: ImageView
+    private lateinit var btnHelpNow: View
+    private lateinit var btnNotNow: View
+    private var rvResult: RecyclerView? = null
+    private lateinit var bubbleAdapter: BubbleAdapter
     private var mascotAnim: AnimatorSet? = null
 
     override fun onCreateView(
@@ -33,67 +40,113 @@ class HelpNavigatorFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // เปลี่ยนเป็นชื่อ layout จริงของคุณ (ไฟล์ที่มี TextSwitcher id=txtQuestion)
         val v = inflater.inflate(R.layout.fragment_reccomendprofile, container, false)
-        imgMascot = v.findViewById(R.id.imgMascot)   // <- เพิ่มบรรทัดนี้
+
+        btnHelpNow = v.findViewById(R.id.btnHelpNow)
+        btnNotNow  = v.findViewById(R.id.btnNotNow)
+        imgMascot  = v.findViewById(R.id.imgMascot)
         txtQuestion = v.findViewById(R.id.txtQuestion)
+
         txtQuestion.setFactory {
             TextView(requireContext()).apply {
-                // ใส่สไตล์เทียบกับ XML เดิม
                 setPadding(18, 18, 18, 18)
                 textSize = 20f
+                // ถ้ามี background bubble ให้ตั้งที่นี่ได้ เช่น:
+                // setBackgroundResource(R.drawable/bg_speech_bubble_down)
             }
         }
         txtQuestion.inAnimation = AlphaAnimation(0f, 1f).apply { duration = 250 }
         txtQuestion.outAnimation = AlphaAnimation(1f, 0f).apply { duration = 250 }
 
-        // ปุ่ม (ถ้ามีใน layout เดียวกัน)
-        v.findViewById<View>(R.id.btnHelpNow)?.setOnClickListener {
-            // ทำอะไรก็ว่าไป เช่นไปหน้า HelpCenter
+        // ปุ่ม
+        btnHelpNow.setOnClickListener {
+            val userId = requireActivity().intent.getIntExtra("userID", -1).takeIf { it != -1 }
+            vm.confirm(userId)            // << เริ่ม Loading → Result
         }
-        v.findViewById<View>(R.id.btnNotNow)?.setOnClickListener {
-            vm.nextNow()
+        btnNotNow.setOnClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+            // หรือถ้าต้องการแค่ข้ามคำถามตอน Intro:
+            // vm.nextNow()
+        }
+        // new ก่อนใช้เสมอ
+        bubbleAdapter = BubbleAdapter { action ->
+            // นำทางเหมือนด้านบน
         }
 
+        rvResult = v.findViewById<RecyclerView>(R.id.rvResult).apply {
+            adapter = bubbleAdapter
+            visibility = View.GONE
+        }
+
+        // (ลบ setOnClickListener ซ้ำซ้อนอันเก่า ๆ ออกให้หมดนะครับ)
         return v
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // มาสคอตแอนิเมชัน
+        mascotAnim = AnimationHelper.attachMascotIdle(viewLifecycleOwner, imgMascot)
+        imgMascot.setOnClickListener { AnimationHelper.boing(it) }
+
         viewLifecycleOwner.lifecycleScope.launch {
-// เริ่มอนิเมชันแบบผูก lifecycle (แนะนำ)
-            mascotAnim = AnimationHelper.attachMascotIdle(viewLifecycleOwner, imgMascot)
-
-            // แตะมาสคอตให้เด้งเล่น ๆ
-            imgMascot.setOnClickListener { AnimationHelper.boing(it) }
-            // กลับหน้าก่อนหน้าเมื่อกด "ไว้ทีหลัง!"
-            view.findViewById<View>(R.id.btnNotNow)?.setOnClickListener {
-                // ถ้าโปรเจกต์นี้ยังไม่ใช้ Navigation Component:
-                requireActivity().onBackPressedDispatcher.onBackPressed()
-            }
-
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // เริ่มหมุนข้อความ (ใส่ userId จริงถ้ามี)
-                vm.start(userId = null, intervalMs = 6000L)
 
+                // 1) สลับ UI ตามสถานะ
+                launch {
+                    vm.ui.collect { state ->
+                        when (state) {
+                            is UiState.Intro -> {
+                                txtQuestion.isVisible = true
+                                btnHelpNow.isVisible = true
+                                btnNotNow.isVisible  = true
+                                rvResult?.isVisible  = false
+                                vm.start(userId = null, intervalMs = 6000L)
+                            }
+                            is UiState.Loading -> {
+                                btnHelpNow.isInvisible = true   // แทน isVisible = false
+                                btnNotNow.isInvisible  = true
+                                rvResult?.isVisible  = false
+                                txtQuestion.isVisible = true
+                                txtQuestion.setText(state.dots)
+                            }
+                            is UiState.Result -> {
+                                txtQuestion.isVisible = false
+                                btnHelpNow.isInvisible = true
+                                btnNotNow.isVisible  = true
+                                rvResult?.isVisible  = true
+                                bubbleAdapter.submitList(state.messages)
+                            }
+                        }
+                    }
+                }
+
+
+                // 2) หมุนคำถามเฉพาะตอนอยู่ Intro
                 launch {
                     vm.question.collect { txt ->
-                        txtQuestion.setText(txt)
+                        if (vm.ui.value is UiState.Intro) {
+                            txtQuestion.setText(txt)
+                        }
                     }
                 }
             }
         }
 
-        // แตะเพื่อข้ามไปข้อความถัดไปทันที
-        txtQuestion.setOnClickListener { vm.nextNow() }
+        // แตะเพื่อข้ามไปคำถามถัดไป (เฉพาะ Intro)
+        txtQuestion.setOnClickListener {
+            if (vm.ui.value is UiState.Intro) vm.nextNow()
+        }
     }
+
     override fun onDestroyView() {
-        super.onDestroyView()
+        rvResult?.adapter = null
+        rvResult = null
         AnimationHelper.stopAndReset(imgMascot, mascotAnim)
         mascotAnim = null
+        super.onDestroyView()
     }
 
     override fun onStop() {
         super.onStop()
-        vm.stop()
+        vm.stop() // หยุดหมุนคำถามเมื่อจอไม่ foreground
     }
 }
