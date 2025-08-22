@@ -42,9 +42,24 @@ import com.google.gson.Gson
 import okhttp3.Response
 import org.json.JSONObject
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import android.graphics.Color
 
 
-
+private fun optDoubleOrNull(obj: org.json.JSONObject, key: String): Double? {
+    val v = obj.opt(key)
+    return when (v) {
+        is Number -> v.toDouble().let { d -> if (d.isFinite()) d else null }
+        is String -> v.toDoubleOrNull()?.let { d -> if (d.isFinite()) d else null }
+        else -> null
+    }
+}
+private fun sanitizeJsonNumbers(raw: String?): String? {
+    if (raw.isNullOrEmpty()) return raw
+    return raw
+        .replace(Regex("""\bNaN\b"""), "null")
+        .replace(Regex("""\bInfinity\b"""), "null")
+        .replace(Regex("""\b-Infinity\b"""), "null")
+}
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
@@ -314,25 +329,27 @@ class HomeFragment : Fragment() {
         val dislikeButton: ImageButton = userView.findViewById(R.id.buttonDislike)
         val labellist: TextView = userView.findViewById((R.id.labellist))
 
-
-        // ดึงขนาดจริงของ ImageView (ถ้ายังไม่ได้ layout ให้ใช้ fallback เป็นขนาดหน้าจอ)
-        val width = if (profileImage.width > 0) profileImage.width else resources.displayMetrics.widthPixels
-        val height = if (profileImage.height > 0) profileImage.height else resources.displayMetrics.heightPixels
-
-
         nickname.text = user.nickname
-        // ปรับ performance ให้โหลดภาพไวขึ้น
-        val thumbRequest = Glide.with(requireContext())
-            .load(user.profilePicture)
-            .override(width / 5, height / 5) // ปรับขนาด thumbnail ให้เล็กลง
+// ผูก tag กับ URL ที่ "normalize แล้ว"
+        val expectedTag = user.profilePicture
+        profileImage.tag = expectedTag
+
+// ใช้ขนาดเป้าหมายจริง ลดงานดีโคด
+        val targetW = if (profileImage.width > 0) profileImage.width else resources.displayMetrics.widthPixels
+        val targetH = if (profileImage.height > 0) profileImage.height else (targetW * 4) / 3  // ปรับอัตราส่วนตาม UI
 
         Glide.with(requireContext())
             .load(user.profilePicture)
-            .override(width / 2, height / 2)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
-            .thumbnail(thumbRequest)
+            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+            .skipMemoryCache(false)
+            .dontAnimate()
+            .centerCrop()
+            .override(targetW, targetH)
+            .placeholder(R.drawable.ic_user)
+            .error(R.drawable.ic_user)
             .into(profileImage)
+
+
 
 
         // ตรวจสอบสถานะ verify และแสดงไอคอนเครื่องหมายถูกหาก verify == 1
@@ -343,15 +360,58 @@ class HomeFragment : Fragment() {
         }
 
         val blockIds = listOf(R.id.block1, R.id.block2, /* ... */ R.id.block3)
+
+        // สร้างลิสต์สำหรับแสดง: ให้ shared มาก่อน แล้วตามด้วยที่เหลือจาก all
+        val shared = user.sharedPreferences.filter { it.isNotBlank() }
+        var all = user.allPreferences.filter { it.isNotBlank() }
+// ถ้า all ว่าง แต่ preferences มี ให้ fallback:
+        if (all.isEmpty() && user.preferences.isNotEmpty()) {
+            all = user.preferences.filter { it.isNotBlank() }
+        }
+        val nonShared = all.filterNot { it in shared }
+        val displayList = shared + nonShared
+
         for ((i, id) in blockIds.withIndex()) {
             val tv = userView.findViewById<TextView>(id)
-            if (i < user.preferences.size) {
-                Log.d("TestPref", "preferences size = ${user.preferences.size}, data = ${user.preferences}")
-                Log.d("BindPref", "block $i = ${user.preferences[i]}")
-                tv.text = user.preferences[i]
-                tv.visibility = View.VISIBLE
-            } else {
-                tv.visibility = View.GONE
+
+            when (i) {
+                0, 1 -> {
+                    val text = displayList.getOrNull(i)
+                    if (text.isNullOrBlank()) {
+                        tv.text = ""
+                        tv.visibility = View.GONE
+                    } else {
+                        tv.text = text
+                        tv.visibility = View.VISIBLE
+                        val isShared = text in shared
+                        tv.setBackgroundResource(
+                            if (isShared) R.drawable.button_pressed else R.drawable.button_normal
+                        )
+                        tv.setTextColor(
+                            if (isShared) Color.WHITE else Color.BLACK
+                        )
+                        Log.d("BindPref", "block $i = $text (shared=$isShared)")
+                    }
+                }
+                2 -> {
+                    val text = displayList.getOrNull(2)
+                    if (text.isNullOrBlank()) {
+                        tv.text = ""
+                        tv.visibility = View.GONE
+                    } else {
+                        val remain = (displayList.size - 3).coerceAtLeast(0)
+                        tv.text = if (remain > 0) "$text (+$remain)" else text
+                        tv.visibility = View.VISIBLE
+                        val isShared = text in shared
+                        tv.setBackgroundResource(
+                            if (isShared) R.drawable.button_pressed else R.drawable.button_normal
+                        )
+                        tv.setTextColor(
+                            if (isShared) Color.WHITE else Color.BLACK
+                        )
+                        Log.d("BindPref", "block $i = ${tv.text} (shared=$isShared)")
+                    }
+                }
             }
             if (index >= users.size || users.isEmpty()) {
                 binding.userListLayout.removeAllViews()
@@ -359,7 +419,7 @@ class HomeFragment : Fragment() {
                 Toast.makeText(requireContext(), "ไม่มีผู้ใช้อีกแล้ว", Toast.LENGTH_SHORT).show()
                 return
             }
-           labellist.text = "มีคนที่เหมาะกับคุณ: ${users.size} คน"
+           labellist.text = "มีคนเหมาะกับคุณ: ${users.size}"
 
             val titledistance: TextView = userView.findViewById(R.id.titledistance)
 
@@ -643,11 +703,26 @@ class HomeFragment : Fragment() {
                     }
 
                     // 👉 เพิ่มส่วนนี้เพื่ออ่าน preferences (array)
-                    val prefsJsonArray = jsonObject.optJSONArray("preferences")
+                    // 👉 เพิ่มโค้ดตรงนี้ก่อนสร้าง user
                     val prefsList = mutableListOf<String>()
-                    if (prefsJsonArray != null) {
-                        for (j in 0 until prefsJsonArray.length()) {
-                            prefsList.add(prefsJsonArray.getString(j))
+                    jsonObject.optJSONArray("preferences")?.let { arr ->
+                        for (j in 0 until arr.length()) {
+                            prefsList.add(arr.getString(j))
+                        }
+                    }
+
+                    // 👉 allPreferences
+                    val allPrefs = mutableListOf<String>().apply {
+                        jsonObject.optJSONArray("allPreferences")?.let { arr ->
+                            for (j in 0 until arr.length()) add(arr.optString(j))
+                        }
+                        if (isEmpty()) addAll(prefsList)  // fallback
+                    }
+
+                    // 👉 sharedPreferences
+                    val sharedPrefs = mutableListOf<String>().apply {
+                        jsonObject.optJSONArray("sharedPreferences")?.let { arr ->
+                            for (j in 0 until arr.length()) add(arr.optString(j))
                         }
                     }
 
@@ -659,6 +734,10 @@ class HomeFragment : Fragment() {
                         jsonObject.optString("DateBirth", ""),
                         jsonObject.getInt("verify"),
                         prefsList,  // <-- ส่ง prefs เข้า data class ด้วย
+                        optDoubleOrNull(jsonObject, "latitude"),   // ✅
+                        optDoubleOrNull(jsonObject, "longitude"),
+                        allPreferences = allPrefs,
+                        sharedPreferences = sharedPrefs
                     )
 
 
@@ -689,7 +768,8 @@ class HomeFragment : Fragment() {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     Log.d("API Response", responseBody ?: "No response")
-                    val recommendedUsers = parseUsers(responseBody)
+                    val safeBody = sanitizeJsonNumbers(responseBody)  // ← เพิ่มบรรทัดนี้
+                    val recommendedUsers = parseUsers(safeBody)
                     withContext(Dispatchers.Main) {
                         callback(recommendedUsers)
                     }
@@ -699,7 +779,8 @@ class HomeFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
+                withContext(Dispatchers.Main
+                ) {
                     Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -750,12 +831,37 @@ class HomeFragment : Fragment() {
                 val jsonObject = jsonArray.getJSONObject(i)
                 val imageFile = jsonObject.getString("imageFile")
                 val prefsJsonArray = jsonObject.optJSONArray("preferences")
+                // preferences (ของเดิม)
                 val prefsList = mutableListOf<String>()
+                jsonObject.optJSONArray("preferences")?.let { arr ->
+                    for (j in 0 until arr.length()) {
+                        prefsList.add(arr.getString(j))
+                    }
+                }
+
+                // ---- เพิ่มใหม่: allPreferences ----
+                val allPrefs = mutableListOf<String>().apply {
+                    jsonObject.optJSONArray("allPreferences")?.let { arr ->
+                        for (j in 0 until arr.length()) {
+                            add(arr.optString(j))
+                        }
+                    }
+                    if (isEmpty()) addAll(prefsList)   // ✅ เรียก isEmpty() ของ list ถูกต้องแล้ว
+                }
+
+                // ---- เพิ่มใหม่: sharedPreferences ----
+                val sharedPrefs = mutableListOf<String>()
+                jsonObject.optJSONArray("sharedPreferences")?.let { arr ->
+                    for (j in 0 until arr.length()) {
+                        sharedPrefs.add(arr.getString(j))
+                    }
+                }
                 if (prefsJsonArray != null) {
                     for (j in 0 until prefsJsonArray.length()) {
                         prefsList.add(prefsJsonArray.getString(j))
                     }
                 }
+
                 Log.d("parseUsers", "User $i imageFile: $imageFile")  // เพิ่มบรรทัดนี้
 
                 val user = User(
@@ -764,10 +870,11 @@ class HomeFragment : Fragment() {
                     jsonObject.getString("imageFile"),
                     jsonObject.optString("dateBirth", ""),
                     jsonObject.getInt("verify"),
-                    prefsList, // เพิ่มตรงนี้
-                    jsonObject.optDouble("latitude"),     // <-- เพิ่ม!
-                    jsonObject.optDouble("longitude")
-
+                    preferences = prefsList, // เพิ่มตรงนี้
+                    optDoubleOrNull(jsonObject, "latitude"),     // ✅ กลายเป็น null ถ้า NaN/ไม่มีค่า
+                    optDoubleOrNull(jsonObject, "longitude"),    // ✅,
+                    allPreferences = allPrefs,           // << ใส่ค่าเพิ่ม
+                    sharedPreferences = sharedPrefs      // << ใส่ค่าเพิ่ม
 
                 )
                 users.add(user)
@@ -807,6 +914,9 @@ data class User(
     val verify: Int,
     val preferences: List<String> = emptyList(), // ← เพิ่มตรงนี้
     val latitude: Double? = null,        // เพิ่มตรงนี้
-    val longitude: Double? = null        // เพิ่มตรงนี้
+    val longitude: Double? = null,        // เพิ่มตรงนี้
+
+    val allPreferences: List<String> = emptyList(),
+    val sharedPreferences: List<String> = emptyList()
 )
 

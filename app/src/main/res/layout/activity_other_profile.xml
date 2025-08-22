@@ -106,8 +106,9 @@
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/buttonReportUser"
                 android:layout_width="wrap_content"
-                android:layout_height="35dp"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:textSize="16sp"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/button_normal"
                 android:text="รายงานผู้ใช้"
@@ -125,7 +126,7 @@
                 android:padding="12dp"
                 android:text="ชื่อจริง: "
                 android:textColor="#000000"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
@@ -139,7 +140,7 @@
                 android:padding="12dp"
                 android:text="นามสกุล: "
                 android:textColor="#000000"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 app:layout_constraintTop_toBottomOf="@id/textViewFirstName"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -153,7 +154,7 @@
                 android:padding="12dp"
                 android:text="ชื่อเล่น: "
                 android:textColor="#000000"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 app:layout_constraintTop_toBottomOf="@id/textViewLastName"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -167,7 +168,7 @@
                 android:padding="12dp"
                 android:text="เพศ: "
                 android:textColor="#000000"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 app:layout_constraintTop_toBottomOf="@id/textViewNickname"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />

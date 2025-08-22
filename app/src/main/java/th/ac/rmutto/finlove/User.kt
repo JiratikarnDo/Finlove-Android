@@ -1,9 +1,11 @@
 package th.ac.rmutto.finlove
 
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 
 data class User(
-    @SerializedName("userID") val id: Int,  // ← เพิ่มบรรทัด
+    @SerializedName(value = "UserID", alternate = ["userID", "id"])  // ← เพิ่มบรรทัด
+    val id: Int = 0,
     val username: String,
     val email: String,
     val firstName: String,
@@ -17,7 +19,8 @@ data class User(
     val education: String,
     val goal: String,
     val imageFile: String,
-    val preferences: String?,
+    @JsonAdapter(StringListAdapter::class)
+    val preferences: List<String> = emptyList(),
     val verify: Int,
 
     // ✅ เพิ่มฟิลด์พิกัดตำแหน่งของผู้ใช้

@@ -20,6 +20,8 @@ import th.ac.rmutto.finlove.User
 import th.ac.rmutto.finlove.WholikeAdapter
 import java.io.IOException
 import androidx.navigation.fragment.findNavController
+import com.google.gson.GsonBuilder
+import th.ac.rmutto.finlove.StringListAdapter
 
 
 class WhoLikeFragment : Fragment() {
@@ -30,6 +32,12 @@ class WhoLikeFragment : Fragment() {
     private lateinit var textSwitchTitle: TextView
     private lateinit var textSwitchSubTitle: TextView
     private val client = OkHttpClient()
+
+    private val gson by lazy {
+        GsonBuilder()
+            .registerTypeAdapter(object : TypeToken<List<String>>() {}.type, StringListAdapter())
+            .create()
+    }
 
     private var showLikedByMe = false
 
@@ -44,7 +52,7 @@ class WhoLikeFragment : Fragment() {
         textSwitchTitle = view.findViewById(R.id.titleLikes) // id ตาม layout ของคุณ
         textSwitchSubTitle = view.findViewById(R.id.subtitleLikes)
 
-        recyclerView.layoutManager = LinearLayoutManager(requireContext(),)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         // ฟัง event สลับ
         switchShowLiked.setOnCheckedChangeListener { _, isChecked ->
@@ -130,7 +138,6 @@ class WhoLikeFragment : Fragment() {
                     override fun onResponse(call: Call, response: Response) {
                         response.body?.string()?.let { jsonString ->
                             Log.d("WhoLikeFragment", "Response JSON: $jsonString")
-                            val gson = Gson()
                             val listType = object : TypeToken<List<User>>() {}.type
                             val users: List<User> = gson.fromJson(jsonString, listType)
 
@@ -182,7 +189,6 @@ class WhoLikeFragment : Fragment() {
             override fun onResponse(call: Call, response: Response) {
                 response.body?.string()?.let { jsonString ->
                     Log.d("WhoLikeFragment", "LikedByMe Response: $jsonString")
-                    val gson = Gson()
                     val listType = object : TypeToken<List<User>>() {}.type
                     val users: List<User> = gson.fromJson(jsonString, listType)
                     activity?.runOnUiThread {

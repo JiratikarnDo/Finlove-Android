@@ -23,67 +23,99 @@
         tools:targetApi="31">
         <activity
             android:name=".AddphotoActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".OtherProfileActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
 
         <activity
             android:name=".ChatActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
 
         <activity
-            android:name=".RegisterActivity7"
-            android:exported="false" />
-        <activity
             android:name=".ChangePreferenceActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
 
         <activity
             android:name=".ResetPasswordActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".GetPINActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
 
         <activity
             android:name=".RegisterActivity8"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterActivity7"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".RegisterActivity6"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".RegisterActivity5"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".RegisterActivity4"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".RegisterActivity3"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".RegisterActivity2"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".RegisterActivity1"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="true" />
         <activity
             android:name=".RegisterActivity"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="true" />
         <activity
             android:name=".ForgotPasswordActivity"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".LoginActivity"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="true" />
 
         <activity android:name=".DatingPlaceActivity" />
 
         <activity
             android:name=".LoadingActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
             android:exported="true" />
         <activity
             android:name=".FirstPageActivity"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -94,6 +126,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:label="@string/app_name"
             android:theme="@style/Theme.Finlove" />
 

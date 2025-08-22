@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 
 class RegisterActivity7 : AppCompatActivity() {
 
@@ -14,6 +15,7 @@ class RegisterActivity7 : AppCompatActivity() {
     private var selectedGender: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register7)
 
@@ -46,9 +48,14 @@ class RegisterActivity7 : AppCompatActivity() {
             val nickname = intent.getStringExtra("nickname")
             val gender = intent.getStringExtra("gender")
             val height = intent.getStringExtra("height")
+            val weight = intent.getStringExtra("weight")
             val phonenumber = intent.getStringExtra("phonenumber")
             val dateOfBirth = intent.getStringExtra("dateOfBirth")
             val educationID = intent.getIntExtra("educationID", -1)
+            val careerId = intent.getIntExtra("careerId", 0)       // << เพิ่มบรรทัดนี้
+            val career   = intent.getStringExtra("career")         // ชื่อ (ถ้าต้องใช้แสดงผล)
+            val province = intent.getStringExtra("province")
+                ?: intent.getStringExtra("selectedProvince")
             val home = intent.getStringExtra("home")
             val preferences = intent.getStringExtra("preferences")
             val goalID = intent.getIntExtra("goalID", -1)
@@ -71,11 +78,15 @@ class RegisterActivity7 : AppCompatActivity() {
                 putExtra("nickname", nickname)
                 putExtra("gender", gender)
                 putExtra("height", height)
+                putExtra("weight", weight)
                 putExtra("phonenumber", phonenumber)
                 putExtra("dateOfBirth", dateOfBirth)
                 putExtra("educationID", educationID)
+                putExtra("careerId", careerId)        // << ส่งต่อ id ไปด้วย
+                putExtra("career", career)
                 putExtra("home", home)
                 putExtra("preferences", preferences)
+                putExtra("province", province)
                 putExtra("interestGenderID", interestGenderID)
                 putExtra("goalID", goalID)
             }

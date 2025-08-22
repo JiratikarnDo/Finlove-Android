@@ -14,13 +14,26 @@
         <item name="android:fontFamily">@font/kanit_regular</item>
         <item name="fontFamily">@font/kanit_regular</item>
 
+        <!-- ✅ สีของ Status Bar -->
+        <item name="android:statusBarColor">#0DD7E9</item>   <!-- หรือใช้ ?attr/colorPrimary -->
+        <item name="android:windowLightStatusBar">true</item>
+        <!-- ถ้าพื้นหลังสว่างและอยากให้ไอคอนเป็นสีเข้ม -->
+        <!-- <item name="android:windowLightStatusBar">true</item> -->
 
+        <!-- (สำรองให้บางเวอร์ชัน) -->
+        <item name="colorPrimaryDark">#09B1C0</item>
         <!-- กำหนด font, style หรือ attribute อื่น ๆ ตามต้องการ -->
     </style>
 
     <style name="ToolbarTitleStyle" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Theme.Finlove.EdgeToEdge" parent="Theme.Finlove">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- ตั้งตามพื้นหลัง: true = ไอคอนดำ (พื้นหลังสว่าง), false = ไอคอนขาว (พื้นหลังเข้ม) -->
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="CircleImageStyle" parent="ShapeAppearance.MaterialComponents.SmallComponent">

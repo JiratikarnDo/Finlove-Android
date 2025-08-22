@@ -6,9 +6,11 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.text.InputFilter
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 
 class RegisterActivity2 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register2)
 

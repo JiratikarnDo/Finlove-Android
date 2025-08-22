@@ -9,13 +9,16 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import android.text.InputFilter
 import android.text.Spanned
+import androidx.core.view.WindowCompat
 import java.util.regex.Pattern
+
 
 class RegisterActivity3 : AppCompatActivity() {
 
     private var selectedGender: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register3)
 
@@ -23,6 +26,7 @@ class RegisterActivity3 : AppCompatActivity() {
         val buttonFemale = findViewById<Button>(R.id.buttonFemale)
         val buttonOther = findViewById<Button>(R.id.buttonOther)
         val editTextHeight = findViewById<EditText>(R.id.editTextHeight)
+        val editTextWeight = findViewById<EditText>(R.id.editTextWeight)
         val editTextPhoneNumber = findViewById<EditText>(R.id.editTextPhoneNumber)
         val buttonNextStep3 = findViewById<ImageButton>(R.id.buttonNextStep3)
 
@@ -35,6 +39,7 @@ class RegisterActivity3 : AppCompatActivity() {
 
         // กำหนดข้อจำกัดรูปแบบของส่วนสูง ไม่เกิน 3 หลักเฉพาะตัวเลขก่อนทศนิยม
         editTextHeight.filters = arrayOf(ThreeDigitInputFilter())
+        editTextWeight.filters = arrayOf(ThreeDigitInputFilter())
 
         // รับข้อมูลจากหน้า RegisterActivity2
         val email = intent.getStringExtra("email")
@@ -46,6 +51,7 @@ class RegisterActivity3 : AppCompatActivity() {
 
         buttonNextStep3.setOnClickListener {
             val height = editTextHeight.text.toString()
+            val weight = editTextWeight.text.toString()
             val phoneNumber = editTextPhoneNumber.text.toString()
 
             if (selectedGender == null) {
@@ -58,9 +64,19 @@ class RegisterActivity3 : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (weight.isEmpty()) {
+                editTextHeight.error = "กรุณาระบุน้ำหนัก"
+                return@setOnClickListener
+            }
+
             // ตรวจสอบว่าความสูงเป็นตัวเลขหรือไม่
             if (height.toIntOrNull() == null) {
                 editTextHeight.error = "กรุณาระบุส่วนสูงที่เป็นตัวเลข"
+                return@setOnClickListener
+            }
+
+            if (weight.toIntOrNull() == null) {
+                editTextWeight.error = "กรุณาระบุน้ำหนักที่เป็นตัวเลข"
                 return@setOnClickListener
             }
 
@@ -85,6 +101,7 @@ class RegisterActivity3 : AppCompatActivity() {
             intent.putExtra("nickname", nickname)
             intent.putExtra("gender", selectedGender)
             intent.putExtra("height", height)
+            intent.putExtra("weight", weight)
             intent.putExtra("phonenumber", phoneNumber)
             startActivity(intent)
         }

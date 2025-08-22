@@ -100,7 +100,7 @@ class HelpNavigatorViewModel : ViewModel() {
             delay(1200)
 
             val generic = listOf(
-                BubbleMessage("เหมือนคุณจะขาดบางข้อมูลทั่วไปที่จำเป็น", BubbleType.GENERIC),
+                BubbleMessage("เหมือนคุณจะพลาดบางอย่างไป", BubbleType.GENERIC),
                 BubbleMessage("การขาดข้อมูลอาจทำให้คนอื่นเห็นคุณได้น้อยลง", BubbleType.GENERIC)
             )
 
@@ -153,7 +153,7 @@ class HelpNavigatorViewModel : ViewModel() {
         // TODO: เรียก API จริงแล้ว map เป็น BubbleMessage(type = PERSONAL)
         delay(300)
         return listOf(
-            BubbleMessage("คุณยังเลือกสิ่งที่ชื่อชอบไม่ครบ 3อย่าง ลองเลือกเพิ่มสิ", type = BubbleType.PERSONAL,
+            BubbleMessage("คุณยังเลือกสิ่งที่ชื่นชอบไม่ครบ 3อย่าง ลองเลือกเพิ่มสิ", type = BubbleType.PERSONAL,
                 ctaText = "แก้ไข",
                 ctaAction = BubbleAction.OpenProfileSection("preferences")
             ),

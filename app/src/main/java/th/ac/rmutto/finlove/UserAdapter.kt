@@ -55,7 +55,24 @@ class UserAdapter(private val users: List<User>, private val currentUserID: Int)
         // ฟังก์ชัน bind สำหรับกำหนดข้อมูลให้กับ View
         fun bind(user: User, currentUserID: Int) {
             nickname.text = user.nickname // ตั้งค่าชื่อเล่นจาก User data class
-            Glide.with(itemView.context).load(user.imageFile).into(profileImage) // โหลดรูปโปรไฟล์จาก imageFile
+            val expectedUrl = user.imageFile
+            profileImage.tag = expectedUrl
+
+            // คำนวณขนาดเป้าหมาย (fallback หากยังไม่ได้ layout)
+            val w = if (profileImage.width > 0) profileImage.width else itemView.resources.displayMetrics.widthPixels
+            val h = if (profileImage.height > 0) profileImage.height else (w * 4) / 3
+
+            Glide.with(profileImage)
+                .load(expectedUrl)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.AUTOMATIC)
+                .skipMemoryCache(false)
+                .dontAnimate()
+                .centerCrop()
+                .override(w, h)
+                .thumbnail(0.25f)
+                .placeholder(R.drawable.ic_user)
+                .error(R.drawable.ic_user) // โหลดรูปโปรไฟล์จาก imageFile
+                .into(profileImage)
 
             val age = calculateAge(user.dateBirth ?: "")
             Log.d("UserAdapter", "Calculated age: $age")

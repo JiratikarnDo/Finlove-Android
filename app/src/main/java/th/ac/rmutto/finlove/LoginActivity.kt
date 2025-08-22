@@ -17,10 +17,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONObject
+import androidx.core.view.WindowCompat
 import th.ac.rmutto.finlove.utils.AnimationHelper
 
 class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // ให้คอนเทนต์วาดหลัง status bar
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 

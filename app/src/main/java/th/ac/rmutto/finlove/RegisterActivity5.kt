@@ -6,12 +6,14 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 
 class RegisterActivity5 : AppCompatActivity() {
 
     private lateinit var selectedPreferences: MutableList<Int>
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register5)
 
@@ -68,9 +70,14 @@ class RegisterActivity5 : AppCompatActivity() {
             val nickname = intent.getStringExtra("nickname")
             val gender = intent.getStringExtra("gender")
             val height = intent.getStringExtra("height")
+            val weight = intent.getStringExtra("weight")
             val phonenumber = intent.getStringExtra("phonenumber")
             val dateOfBirth = intent.getStringExtra("dateOfBirth")
             val educationID = intent.getIntExtra("educationID", -1)
+            val careerId = intent.getIntExtra("careerId", 0)       // << เพิ่มบรรทัดนี้
+            val career   = intent.getStringExtra("career")         // ชื่อ (ถ้าต้องใช้แสดงผล)
+            val province = intent.getStringExtra("province")
+                ?: intent.getStringExtra("selectedProvince")
             val home = intent.getStringExtra("home")
 
             if (educationID == -1) {
@@ -88,10 +95,14 @@ class RegisterActivity5 : AppCompatActivity() {
             intent.putExtra("nickname", nickname)
             intent.putExtra("gender", gender)
             intent.putExtra("height", height)
+            intent.putExtra("weight", weight)
             intent.putExtra("phonenumber", phonenumber)
             intent.putExtra("dateOfBirth", dateOfBirth)
             intent.putExtra("educationID", educationID)
+            intent.putExtra("careerId", careerId)        // << ส่งต่อ id ไปด้วย
+            intent.putExtra("career", career)            // (ถ้าหน้าถัดไปต้องแสดงชื่อ)
             intent.putExtra("home", home)
+            intent.putExtra("province", province)
             intent.putExtra("preferences", preferencesString)
             startActivity(intent)
         }

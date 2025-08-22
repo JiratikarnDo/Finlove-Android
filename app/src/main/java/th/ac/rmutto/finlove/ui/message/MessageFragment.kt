@@ -276,7 +276,7 @@ class MatchedUserAdapter(
         // โหลดภาพด้วย Glide โดยมี placeholder และ error image
         Glide.with(holder.profileImage.context)
             .load(user.profilePicture)
-            .placeholder(R.drawable.img_1) // ภาพที่แสดงระหว่างโหลด
+            .placeholder(R.drawable.ic_user) // ภาพที่แสดงระหว่างโหลด
             .error(R.drawable.error) // ภาพที่แสดงถ้าโหลดไม่สำเร็จ
             .into(holder.profileImage)
 

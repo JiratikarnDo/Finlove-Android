@@ -132,25 +132,26 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Verification Button -->
+
+
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/buttonVerify"
             android:layout_width="100dp"
             android:layout_height="30dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/button_gradient"
-            android:text="ยืนยันตัวตน"
             android:shadowColor="@android:color/black"
             android:shadowDx="0"
             android:shadowDy="0"
             android:shadowRadius="2"
+            android:text="ยืนยันตัวตน"
             android:textColor="@android:color/white"
             android:textSize="18dp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/buttonEditProfile"
-            app:layout_constraintHorizontal_bias="0.232"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/constraintLayout"
             app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
-
 
         <ImageButton
             android:id="@+id/buttonEditProfile"
@@ -193,7 +194,7 @@
             android:hint="Username: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.69"
             app:layout_constraintStart_toStartOf="parent"
@@ -227,7 +228,7 @@
             android:hint="Email: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@id/textViewUsername"
@@ -255,7 +256,7 @@
             android:hint="Firstname: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.675"
             app:layout_constraintStart_toStartOf="parent"
@@ -286,7 +287,7 @@
             android:hint="Lastname: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:background="@android:color/transparent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
@@ -321,7 +322,7 @@
             android:hint="Nickname: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="18sp"
+            android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.675"
             app:layout_constraintStart_toStartOf="parent"
@@ -354,7 +355,7 @@
 
         <LinearLayout
             android:id="@+id/preferenceContainer"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:orientation="horizontal"
@@ -363,7 +364,9 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:gravity="center" />
+            android:gravity="center"
+            android:weightSum="3" />
+
 
         <!-- ปุ่มแก้ไขความชอบ -->
         <androidx.appcompat.widget.AppCompatButton

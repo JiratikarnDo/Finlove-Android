@@ -13,12 +13,16 @@ import android.text.InputFilter
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import android.util.Log
+import androidx.core.view.WindowCompat
+import android.util.Patterns
+import java.util.Locale
 
 class RegisterActivity1 : AppCompatActivity() {
 
     private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register1)
 
@@ -37,9 +41,23 @@ class RegisterActivity1 : AppCompatActivity() {
             val username = editTextUsername.text.toString()
             val password = editTextPassword.text.toString()
 
-            if (email.length > 40) {
-                editTextEmail.error = "อีเมลต้องไม่เกิน 40 ตัวอักษร"
+            // เช็คว่าง/ความยาว (ให้สอดคล้องกับ filter)
+            if (email.isEmpty()) {
+                editTextEmail.error = "กรุณาระบุอีเมล"
                 return@setOnClickListener
+            }
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                editTextEmail.error = "อีเมลไม่ถูกต้อง"
+                return@setOnClickListener
+            }
+
+            // 2) อนุญาตเฉพาะโดเมนที่กำหนด — ถ้าไม่ใช่ ให้หยุดอยู่หน้านี้
+            val domain = email.substringAfter('@', "").lowercase(Locale.US)
+            val allowedDomains = setOf("gmail.com", "hotmail.com", "outlook.com", "yahoo.com")
+            if (domain !in allowedDomains) {
+                editTextEmail.error = "อนุญาตเฉพาะ @gmail/@hotmail/@outlook/@yahoo"
+                Toast.makeText(this, "ตรวจสอบโดเมนอีเมลอีกครั้ง: $domain", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener   // <- ไม่ไปหน้าถัดไป
             }
 
             if (username.length > 20) {

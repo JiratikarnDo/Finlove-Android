@@ -222,7 +222,7 @@ class OtherProfileActivity : AppCompatActivity() {
             preferenceTextView.gravity = Gravity.CENTER
             preferenceTextView.setTextColor(resources.getColor(R.color.white))
 
-            val layoutParams = LinearLayout.LayoutParams(250, 150)
+            val layoutParams = LinearLayout.LayoutParams(165, 100)
             layoutParams.setMargins(16, 16, 16, 16)
             preferenceTextView.layoutParams = layoutParams
 

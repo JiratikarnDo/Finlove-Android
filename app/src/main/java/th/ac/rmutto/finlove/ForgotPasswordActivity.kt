@@ -16,6 +16,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
+import androidx.core.view.WindowCompat
 
 class ForgotPasswordActivity : AppCompatActivity() {
 
@@ -25,6 +26,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
     private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_forgot_password)
 

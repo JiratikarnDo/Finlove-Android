@@ -8,14 +8,25 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import java.util.Calendar
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.AdapterView
+import android.widget.Spinner
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 
 class RegisterActivity4 : AppCompatActivity() {
 
     private var selectedEducation: String? = null
+    private var selectedCareerName: String? = null
     private var selectedDateOfBirth: String? = null
+    private var selectedCareerId: Int? = null
+    private var selectedProvince: String? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register4)
 
@@ -23,17 +34,60 @@ class RegisterActivity4 : AppCompatActivity() {
         val buttonBachelor = findViewById<Button>(R.id.buttonBachelor)
         val buttonMaster = findViewById<Button>(R.id.buttonMaster)
         val buttonPhd = findViewById<Button>(R.id.buttonPhd)
-        val buttonWorking = findViewById<Button>(R.id.buttonWorking)
         val editTextHome = findViewById<EditText>(R.id.editTextHome)
         val buttonSelectDate = findViewById<Button>(R.id.buttonSelectDate)
         val buttonNextStep4 = findViewById<ImageButton>(R.id.buttonNextStep4)
+        val careerDropdown = findViewById<AutoCompleteTextView>(R.id.dropdowncareer)
+
+        // รายการต้อง “ตรงกับตาราง careerdetail” ของคุณ
+        val careerItems = listOf(
+            0 to "ไม่ระบุ",
+            1 to "นักเรียน",
+            2 to "นักศึกษา",
+            3 to "พนักงาน",
+            4 to "ข้าราชการ"
+            // ถ้ามี "ไม่ระบุ" = 0 ก็เพิ่มได้: 0 to "ไม่ระบุ"
+        )
+        val careerNames = careerItems.map { it.second }
+
+        careerDropdown.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, careerNames)
+        )
+
+        careerDropdown.setOnItemClickListener { _, _, position, _ ->
+            val (id, name) = careerItems[position]
+            selectedCareerId = id
+            selectedCareerName = name
+        }
+
+// ให้แตะแล้วลิสต์เด้งทันที
+        careerDropdown.setOnClickListener { careerDropdown.showDropDown() }
+        careerDropdown.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) careerDropdown.showDropDown()
+        }
+
+        // ---------- [บล็อก A] ใส่ตรงนี้: findViewById + adapter + listener ----------
+        // --- Dropdown จังหวัด ---
+        val provinceDropdown = findViewById<AutoCompleteTextView>(R.id.dropdownProvince)
+
+        val provinces = resources.getStringArray(R.array.province_display_array)
+        val provinceAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, provinces)
+        provinceDropdown.setAdapter(provinceAdapter)
+
+        provinceDropdown.setOnItemClickListener { parent, _, position, _ ->
+            selectedProvince = parent.getItemAtPosition(position)?.toString()
+        }
+
+// แตะแล้วให้แสดงลิสต์ทันที (สะดวกขึ้น)
+        provinceDropdown.setOnClickListener { provinceDropdown.showDropDown() }
+        provinceDropdown.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) provinceDropdown.showDropDown() }
+        // ---------------------------------------------------------------------------
 
         // ฟังก์ชันสำหรับจัดการการคลิกปุ่มระดับการศึกษา
         setupEducationButton(buttonHighSchool, "มัธยมศึกษา")
         setupEducationButton(buttonBachelor, "ปริญญาตรี")
         setupEducationButton(buttonMaster, "ปริญญาโท")
         setupEducationButton(buttonPhd, "ปริญญาเอก")
-        setupEducationButton(buttonWorking, "กำลังทำงาน")
 
         buttonSelectDate.setOnClickListener {
             val calendar = Calendar.getInstance()
@@ -70,11 +124,23 @@ class RegisterActivity4 : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (selectedCareerId == null) {
+                Toast.makeText(this, "กรุณาเลือกอาชีพก่อน", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
             // ตรวจสอบว่าอายุถึงเกณฑ์ 18 ปีหรือไม่
             if (!isAgeAboveOrEqual18(selectedDateOfBirth!!)) {
                 Toast.makeText(this, "อายุของคุณต้องมากกว่าหรือเท่ากับ 18 ปี", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
+
+            // ---------- [บล็อก B] ใส่เช็คจังหวัดก่อนส่งต่อ ----------
+            if (selectedProvince.isNullOrEmpty()) {
+                Toast.makeText(this, "กรุณาเลือกจังหวัด", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            // -------------------------------------------------------
 
             // รับข้อมูลจากหน้า RegisterActivity3
             val email = intent.getStringExtra("email")
@@ -85,6 +151,7 @@ class RegisterActivity4 : AppCompatActivity() {
             val nickname = intent.getStringExtra("nickname")
             val gender = intent.getStringExtra("gender")
             val height = intent.getStringExtra("height")
+            val weight = intent.getStringExtra("weight")
             val phonenumber = intent.getStringExtra("phonenumber")
 
             // ส่งข้อมูลไปยัง RegisterActivity5
@@ -97,10 +164,14 @@ class RegisterActivity4 : AppCompatActivity() {
             intent.putExtra("nickname", nickname)
             intent.putExtra("gender", gender)
             intent.putExtra("height", height)
+            intent.putExtra("weight", weight)
             intent.putExtra("phonenumber", phonenumber)
             intent.putExtra("dateOfBirth", selectedDateOfBirth)
             intent.putExtra("educationID", getEducationID(selectedEducation!!))
+            intent.putExtra("careerId", selectedCareerId ?: 0)
+            intent.putExtra("career", selectedCareerName ?: "")
             intent.putExtra("home", home)
+            intent.putExtra("province", selectedProvince)
             startActivity(intent)
         }
     }
@@ -112,7 +183,6 @@ class RegisterActivity4 : AppCompatActivity() {
             "ปริญญาตรี" -> 2
             "ปริญญาโท" -> 3
             "ปริญญาเอก" -> 4
-            "กำลังทำงาน" -> 5
             else -> -1
         }
     }
@@ -123,7 +193,6 @@ class RegisterActivity4 : AppCompatActivity() {
             findViewById<Button>(R.id.buttonBachelor).isSelected = false
             findViewById<Button>(R.id.buttonMaster).isSelected = false
             findViewById<Button>(R.id.buttonPhd).isSelected = false
-            findViewById<Button>(R.id.buttonWorking).isSelected = false
 
             // ตั้งค่าสำหรับปุ่มที่ถูกเลือก
             button.isSelected = true

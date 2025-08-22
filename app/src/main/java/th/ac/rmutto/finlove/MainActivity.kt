@@ -16,8 +16,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.util.Log
 import android.view.ViewGroup
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import th.ac.rmutto.finlove.utils.AnimationHelper
 
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContentView(R.layout.activity_main)
         // *** Initialize sharedPref ที่นี่ ***
         sharedPref = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)

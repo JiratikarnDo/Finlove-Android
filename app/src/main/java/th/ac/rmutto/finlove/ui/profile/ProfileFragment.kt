@@ -259,7 +259,20 @@ class ProfileFragment : Fragment() {
 
     private fun loadPreferences(preferences: String?) {
         preferenceContainer.removeAllViews()
-        val preferencesArray = preferences?.split(",") ?: listOf()
+        val cleaned = preferences
+            ?.trim()
+            ?.removePrefix("[")
+            ?.removeSuffix("]")
+            ?.replace("\"", "")
+            ?: ""
+        // ✅ split ด้วย comma (รองรับ , 、 ，) แล้ว trim/กรองค่าว่าง
+        val preferencesArray = if (cleaned.isBlank()) {
+            emptyList()
+        } else {
+            cleaned.split(Regex("\\s*[，,、]\\s*"))
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        }
         for (preference in preferencesArray) {
             val preferenceTextView = TextView(requireContext())
             preferenceTextView.text = preference
@@ -270,12 +283,13 @@ class ProfileFragment : Fragment() {
             preferenceTextView.gravity = Gravity.CENTER // จัดให้ตัวหนังสืออยู่ตรงกลาง
             preferenceTextView.setTextColor(resources.getColor(R.color.white))
 
-            val layoutParams = LinearLayout.LayoutParams(250, 150) // กำหนดขนาดเป็น 50x50
+            val layoutParams = LinearLayout.LayoutParams(165, 100) // กำหนดขนาดเป็น 50x50
             layoutParams.setMargins(16, 16, 16, 16)
             preferenceTextView.layoutParams = layoutParams
             preferenceContainer.addView(preferenceTextView)
         }
     }
+
 
     private fun fetchUserInfo(userID: Int) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -324,7 +338,7 @@ class ProfileFragment : Fragment() {
         toolbarTitle.text = user.nickname
         verifyBadgeNickname.visibility = if (user.verify == 1) View.VISIBLE else View.GONE
 
-        loadPreferences(user.preferences)
+        loadPreferences(user.preferences.toString())
 
         val genderValueArray = resources.getStringArray(R.array.gender_array) // อ่าน array ภาษาอังกฤษครั้งเดียว
         val genderIndex = genderValueArray.indexOf(user.gender) // user.gender เช่น "Male" "Female" "Other"
@@ -606,7 +620,7 @@ class ProfileFragment : Fragment() {
             interestGender = jsonObject.optString("interestGender", ""),
             education = jsonObject.optString("education", ""),
             goal = jsonObject.optString("goal", ""),
-            preferences = jsonObject.optString("preferences", ""),
+            preferences = listOf(jsonObject.optString("preferences", "")),
             height = jsonObject.optDouble("height", 0.0),
             home = jsonObject.optString("home", ""),
             dateBirth = jsonObject.optString("DateBirth", ""),

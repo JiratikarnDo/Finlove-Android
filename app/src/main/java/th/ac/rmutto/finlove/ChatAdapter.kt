@@ -9,8 +9,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import org.json.JSONArray
+import androidx.emoji2.text.EmojiCompat
 
 class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
 
     private var messages: List<ChatMessage> = listOf()
 
@@ -52,6 +55,18 @@ class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<Recycle
         }
     }
 
+    /** ถอดกรณีที่ถูก double-escaped เช่น \\uD83D\\uDE00 -> 😀 */
+    private fun decodeIfDoubleEscaped(s: String?): String {
+        if (s.isNullOrEmpty()) return ""
+        val maybe = s.replace("\\\\u", "\\u")           // แปลง \\u -> \u
+        return try {
+            // ให้ JSON แปลง \uXXXX เป็นตัวจริง
+            JSONArray("[\"$maybe\"]").getString(0)
+        } catch (_: Exception) {
+            s
+        }
+    }
+
     override fun getItemCount(): Int = messages.size
 
     inner class LeftChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -59,10 +74,38 @@ class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<Recycle
         private val messageText: TextView = itemView.findViewById(R.id.message_text)
 
         fun bind(chatMessage: ChatMessage) {
+            val decoded = decodeIfDoubleEscaped(chatMessage.message)
             messageText.text = chatMessage.message
+            messageText.text = EmojiCompat.get().process(decoded)
+            val url = chatMessage.profilePicture
+            Log.d("ChatAdapter", "Left avatar url for ${chatMessage.senderID} = $url")
+
+            // กันเคส url ว่าง
+            if (url.isNullOrBlank()) {
+                profileImage.setImageResource(R.drawable.ic_user)
+                return
+            }
+
             Glide.with(itemView.context)
-                .load(chatMessage.profilePicture)
+                .load(url)
+                .placeholder(R.drawable.ic_user)
+                .error(R.drawable.error)
+                .circleCrop()
+                .addListener(object: com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
+                    override fun onLoadFailed(
+                        e: com.bumptech.glide.load.engine.GlideException?,
+                        model: Any?, target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>?, isFirstResource: Boolean
+                    ): Boolean {
+                        Log.e("ChatAdapter", "Glide load failed: $model", e)
+                        return false
+                    }
+                    override fun onResourceReady(
+                        resource: android.graphics.drawable.Drawable?, model: Any?,
+                        target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>?, dataSource: com.bumptech.glide.load.DataSource?, isFirstResource: Boolean
+                    ): Boolean { return false }
+                })
                 .into(profileImage)
+
 
             // กดที่รูปเพื่อไปหน้าโปรไฟล์
             profileImage.setOnClickListener {
@@ -78,7 +121,9 @@ class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<Recycle
         private val messageText: TextView = itemView.findViewById(R.id.message_text)
 
         fun bind(chatMessage: ChatMessage) {
+            val decoded = decodeIfDoubleEscaped(chatMessage.message)
             messageText.text = chatMessage.message
+            messageText.text = EmojiCompat.get().process(decoded)
         }
     }
 }

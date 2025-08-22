@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,6 +24,7 @@ class RegisterActivity8 : AppCompatActivity() {
     private var selectedImageUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register8)
 
@@ -50,11 +52,16 @@ class RegisterActivity8 : AppCompatActivity() {
             val nickname = intent.getStringExtra("nickname")
             val gender = intent.getStringExtra("gender")
             val height = intent.getStringExtra("height")
+            val weight = intent.getStringExtra("weight")
             val phonenumber = intent.getStringExtra("phonenumber")
             val dateOfBirth = intent.getStringExtra("dateOfBirth")
             val educationID = intent.getIntExtra("educationID", -1)
+            val careerId = intent.getIntExtra("careerId", 0)       // << เพิ่มบรรทัดนี้
+            val career   = intent.getStringExtra("career")         // ชื่อ (ถ้าต้องใช้แสดงผล)
             val home = intent.getStringExtra("home")
             val preferences = intent.getStringExtra("preferences")
+            val province = intent.getStringExtra("province")
+                ?: intent.getStringExtra("selectedProvince")
             val goalID = intent.getIntExtra("goalID", -1) // ดึง goalID จาก Intent
             val interestGenderID = intent.getIntExtra("interestGenderID", -1) // ดึง interestGenderID
 
@@ -86,6 +93,10 @@ class RegisterActivity8 : AppCompatActivity() {
                     .addFormDataPart("preferences", preferences!!)
                     .addFormDataPart("goalID", goalID.toString())
                     .addFormDataPart("interestGenderID", interestGenderID.toString()) // เพิ่ม interestGenderID
+                    // ----- ฟิลด์ใหม่ -----
+                    .addFormDataPart("weight",   (weight ?: "").trim())             // ถ้า backend เอาเลข ให้ parse ตอนฝั่ง server
+                    .addFormDataPart("status",   career ?: "ไม่ระบุ")               // ถ้าใช้ id: เปลี่ยนเป็น status_id.toString()
+                    .addFormDataPart("province", province ?: "")
                     .addPart(body) // เพิ่มไฟล์ภาพใน Body
                     .build()
 

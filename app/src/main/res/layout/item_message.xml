@@ -14,8 +14,8 @@
 
         <ImageView
             android:id="@+id/imageProfile"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginEnd="16dp"
             android:background="@drawable/rounded_square_shape"
             android:clipToOutline="true"
@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:text="Nickname"
                 android:textColor="@android:color/black"
-                android:textSize="18sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -47,7 +47,7 @@
                 android:maxLines="1"
                 android:text="Last message preview"
                 android:textColor="#666363"
-                android:textSize="14sp" />
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/textLastInteraction"
@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:text="12:34"
                 android:textColor="#666363"
-                android:textSize="12sp" />
+                android:textSize="10sp" />
         </LinearLayout>
 
         <!-- ปรับขนาดและสไตล์ปุ่มลบ -->

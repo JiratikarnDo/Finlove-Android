@@ -56,7 +56,11 @@ dependencies {
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation ("com.squareup.retrofit2:retrofit:2.11.0")          // ถ้าใช้ API
     implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation ("com.google.android.libraries.places:places:3.5.0")   // เวอร์ชันใหม่ๆ ก็ได้
+    implementation ("com.google.android.material:material:1.11.0")
 
+    implementation("androidx.emoji2:emoji2:1.5.0")
+    implementation("androidx.emoji2:emoji2-views:1.5.0")
 
 // เพิ่มไลบรารีสำหรับ Firebase Cloud Messaging
     implementation("com.google.firebase:firebase-messaging")

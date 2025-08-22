@@ -26,7 +26,7 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonGoal1"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:layout_marginTop="40dp"
         android:background="@drawable/button_selector"
         android:textColor="@drawable/text_selector"
@@ -39,7 +39,7 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonGoal2"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/button_selector"
         android:text="หาคู่เดทช่วงสั้นๆ"
@@ -52,7 +52,7 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonGoal3"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/button_selector"
         android:text="หาเพื่อนใหม่"
@@ -65,7 +65,7 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonGoal4"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/button_selector"
         android:text="ยังไม่แน่ใจ"
