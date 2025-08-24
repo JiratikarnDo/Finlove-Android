@@ -26,6 +26,7 @@ import androidx.core.view.updatePadding
 import java.text.SimpleDateFormat
 import java.util.*
 import android.Manifest
+import android.content.Context
 import android.content.IntentSender
 import android.location.Location
 import com.google.android.gms.location.*
@@ -675,6 +676,16 @@ class HomeFragment : Fragment() {
     private fun fetchUserByID(targetUserID: Int, callback: (User?) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
             val url = getString(R.string.root_url) + "/api_v2/user/detail"
+
+            val prefs = requireContext().getSharedPreferences("FinLovePrefs", Context.MODE_PRIVATE)
+            val token = prefs.getString("jwt_token", null)
+
+            if (token.isNullOrBlank()) {
+                Log.w("fetchUserByID", "token is null/blank → จะโดน missing token แน่นอน")
+                withContext(Dispatchers.Main) { callback(null) }
+                return@launch
+            }
+
             val formBody = FormBody.Builder()
                 .add("userID", targetUserID.toString())
                 .build()
@@ -682,78 +693,71 @@ class HomeFragment : Fragment() {
             val request = Request.Builder()
                 .url(url)
                 .post(formBody)
+                .addHeader("Authorization", "Bearer $token")
+                // .addHeader("Cookie", "token=$token") // ถ้า backend อ่านจากคุกกี้ ให้ใช้บรรทัดนี้แทน/ร่วมด้วย
                 .build()
 
             try {
                 val response = client.newCall(request).execute()
                 val responseBody = response.body?.string()
-                Log.d("fetchUserByID", "Response body: $responseBody")
+                Log.d("fetchUserByID", "code=${response.code} body=$responseBody")
+
+                // ถ้า token หมดอายุ/ผิด → 401
+                if (response.code == 401) {
+                    withContext(Dispatchers.Main) { callback(null) }
+                    return@launch
+                }
 
                 if (response.isSuccessful && !responseBody.isNullOrEmpty()) {
-                    // แก้ตรงนี้ด้วย: ถ้า response เป็น object → ใช้ JSONObject()
                     val jsonObject = JSONObject(responseBody)
 
-                    val imageFile = jsonObject.getString("imageFile")
-
+                    val imageFile = jsonObject.optString("imageFile")
                     val profilePicture = if (imageFile.startsWith("http")) {
-                        imageFile  // เป็น full URL อยู่แล้ว
+                        imageFile
                     } else {
                         val baseImageUrl = getString(R.string.root_url2) + "/ai_v2/user/"
                         baseImageUrl + imageFile
                     }
 
-                    // 👉 เพิ่มส่วนนี้เพื่ออ่าน preferences (array)
-                    // 👉 เพิ่มโค้ดตรงนี้ก่อนสร้าง user
-                    val prefsList = mutableListOf<String>()
-                    jsonObject.optJSONArray("preferences")?.let { arr ->
-                        for (j in 0 until arr.length()) {
-                            prefsList.add(arr.getString(j))
+                    val prefsList = mutableListOf<String>().apply {
+                        jsonObject.optJSONArray("preferences")?.let { arr ->
+                            for (j in 0 until arr.length()) add(arr.optString(j))
                         }
                     }
 
-                    // 👉 allPreferences
                     val allPrefs = mutableListOf<String>().apply {
                         jsonObject.optJSONArray("allPreferences")?.let { arr ->
                             for (j in 0 until arr.length()) add(arr.optString(j))
                         }
-                        if (isEmpty()) addAll(prefsList)  // fallback
+                        if (isEmpty()) addAll(prefsList)
                     }
 
-                    // 👉 sharedPreferences
                     val sharedPrefs = mutableListOf<String>().apply {
                         jsonObject.optJSONArray("sharedPreferences")?.let { arr ->
                             for (j in 0 until arr.length()) add(arr.optString(j))
                         }
                     }
 
-
                     val user = User(
-                        jsonObject.getInt("userID"),
-                        jsonObject.getString("nickname"),
+                        jsonObject.optInt("userID"),
+                        jsonObject.optString("nickname"),
                         profilePicture,
                         jsonObject.optString("DateBirth", ""),
-                        jsonObject.getInt("verify"),
-                        prefsList,  // <-- ส่ง prefs เข้า data class ด้วย
-                        optDoubleOrNull(jsonObject, "latitude"),   // ✅
+                        jsonObject.optInt("verify"),
+                        prefsList,
+                        optDoubleOrNull(jsonObject, "latitude"),
                         optDoubleOrNull(jsonObject, "longitude"),
                         allPreferences = allPrefs,
                         sharedPreferences = sharedPrefs
                     )
 
-
-                    withContext(Dispatchers.Main) {
-                        callback(user)
-                    }
+                    withContext(Dispatchers.Main) { callback(user) }
                 } else {
-                    withContext(Dispatchers.Main) {
-                        callback(null)
-                    }
+                    withContext(Dispatchers.Main) { callback(null) }
                 }
             } catch (e: Exception) {
-                Log.e("fetchUserByID", "Exception: ${e.message}")
-                withContext(Dispatchers.Main) {
-                    callback(null)
-                }
+                Log.e("fetchUserByID", "Exception: ${e.message}", e)
+                withContext(Dispatchers.Main) { callback(null) }
             }
         }
     }

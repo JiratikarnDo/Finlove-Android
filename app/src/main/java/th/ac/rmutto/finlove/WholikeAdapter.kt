@@ -73,7 +73,7 @@ class WholikeAdapter(
             }
         }
         holder.itemView.isEnabled = itemClickable
-        holder.itemView.alpha = if (itemClickable) 1.0f else 0.9f
+        holder.itemView.alpha = if (itemClickable) 1.0f else 1.0f
         // สามารถเซ็ต visual hint ว่ากดไม่ได้ เช่นลด opacity ก็ได้
         holder.textNickname.text = user.nickname
         holder.imageVerified.visibility = if (user.verify == 1) View.VISIBLE else View.GONE
