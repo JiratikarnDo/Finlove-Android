@@ -44,6 +44,8 @@ import okhttp3.Response
 import org.json.JSONObject
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import android.graphics.Color
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.request.RequestOptions
 
 
 private fun optDoubleOrNull(obj: org.json.JSONObject, key: String): Double? {
@@ -336,20 +338,26 @@ class HomeFragment : Fragment() {
         profileImage.tag = expectedTag
 
 // ใช้ขนาดเป้าหมายจริง ลดงานดีโคด
-        val targetW = if (profileImage.width > 0) profileImage.width else resources.displayMetrics.widthPixels
-        val targetH = if (profileImage.height > 0) profileImage.height else (targetW * 4) / 3  // ปรับอัตราส่วนตาม UI
+        val w = if (profileImage.width > 0) profileImage.width else resources.displayMetrics.widthPixels
+        val h = if (profileImage.height > 0) profileImage.height else (w * 4) / 3  // ปรับอัตราส่วนตาม UI
 
         Glide.with(requireContext())
             .load(user.profilePicture)
+            .apply(
+                RequestOptions()
+                    .disallowHardwareConfig()
+                    .format(DecodeFormat.PREFER_RGB_565)
+                    .timeout(60000) // ✅ รอเครือข่ายนานขึ้น ลดโอกาส fail ก่อน อีกตัวจะตามขึ้น
+            )
             .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
             .skipMemoryCache(false)
             .dontAnimate()
+            .override((w * 0.75f).toInt(), (h * 0.75f).toInt())
             .centerCrop()
-            .override(targetW, targetH)
             .placeholder(R.drawable.ic_user)
-            .error(R.drawable.ic_user)
+            .fallback(R.drawable.ic_user) // ✅ ถ้า URL เป็น null จะไม่ขึ้น error ก่อน
+            .error(R.drawable.error)
             .into(profileImage)
-
 
 
 

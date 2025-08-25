@@ -61,31 +61,29 @@
     <!-- Login Button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_login"
-        android:layout_width="300dp"
+        android:layout_width="0dp"
         android:layout_height="55dp"
         android:layout_marginTop="80dp"
-        android:background="@drawable/edittext"
+        android:background="@drawable/button_normal"
         android:text="เข้าสู่ระบบ"
         android:textColor="#000000"
         android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/logoContainer"
+        app:layout_constraintStart_toStartOf="@id/logoContainer"
         app:layout_constraintTop_toBottomOf="@id/logoContainer" />
 
     <!-- Register Button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_register"
-        android:layout_width="300dp"
+        android:layout_width="0dp"
         android:layout_height="55dp"
         android:layout_marginTop="24dp"
-        android:background="@drawable/button"
+        android:background="@drawable/button_pressed"
         android:text="สมัครสมาชิก"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/btn_login"
+        app:layout_constraintStart_toStartOf="@id/btn_login"
         app:layout_constraintTop_toBottomOf="@id/btn_login" />
 
     <!-- Terms and Conditions Checkbox -->
@@ -106,11 +104,11 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:textSize="14sp"
-        android:layout_marginTop="5dp"
         android:clickable="true"
+        android:layout_marginTop="25dp"
         android:text="โปรดอ่านนโยบายความเป็นส่วนตัวก่อนใช้งาน"
-        android:textColor="#1717FF"
+        android:textColor="#808080"
         app:layout_constraintStart_toEndOf="@id/checkbox_terms"
-        app:layout_constraintTop_toTopOf="@id/checkbox_terms" />
+        app:layout_constraintTop_toBottomOf="@id/btn_register" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/txtOtpInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="เราได้ส่งรหัสยืนยัน (OTP) ไปยังอีเมลของคุณ กรุณากรอกรหัส 6 หลักเพื่อยืนยันตัวตน"
+        android:textSize="16sp"
+        android:lineSpacingExtra="2dp"/>
+
+    <EditText
+        android:id="@+id/edtOtp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="กรอก OTP 6 หลัก"
+        android:inputType="number"
+        android:maxLength="6"
+        android:layout_marginTop="12dp"
+        android:padding="12dp"
+        android:background="@android:drawable/edit_text"/>
+
+    <TextView
+        android:id="@+id/txtCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ส่งใหม่ได้ใน 60 วินาที"
+        android:layout_marginTop="8dp"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btnResend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ส่งใหม่"
+            android:enabled="false"/>
+
+        <Button
+            android:id="@+id/btnVerify"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ยืนยัน"
+            android:layout_marginStart="12dp"/>
+    </LinearLayout>
+</LinearLayout>

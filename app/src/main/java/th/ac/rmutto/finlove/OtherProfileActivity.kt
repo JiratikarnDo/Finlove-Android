@@ -107,28 +107,6 @@ class OtherProfileActivity : AppCompatActivity() {
                             .load(profileImage)
                             .placeholder(R.drawable.img_1)  // แสดงภาพ placeholder ขณะกำลังโหลด
                             .error(R.drawable.error)        // แสดงภาพ error ถ้าโหลดไม่ได้
-                            .listener(object : RequestListener<Drawable> {
-                                override fun onLoadFailed(
-                                    e: com.bumptech.glide.load.engine.GlideException?,
-                                    model: Any?,
-                                    target: Target<Drawable>?,
-                                    isFirstResource: Boolean
-                                ): Boolean {
-                                    Log.e("GlideError", "Error loading image", e)
-                                    return false
-                                }
-
-                                override fun onResourceReady(
-                                    resource: Drawable?,
-                                    model: Any?,
-                                    target: Target<Drawable>?,
-                                    dataSource: com.bumptech.glide.load.DataSource?,
-                                    isFirstResource: Boolean
-                                ): Boolean {
-                                    Log.d("GlideSuccess", "Image loaded successfully")
-                                    return false
-                                }
-                            })
                             .into(profileImageView)
 
                         // Show verified icon if user is verified

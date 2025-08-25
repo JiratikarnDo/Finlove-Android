@@ -9,20 +9,23 @@
     tools:context=".RegisterActivity8">
 
     <!-- Title TextView -->
+
+    <!-- Subtitle TextView -->
     <TextView
         android:id="@+id/textViewTitle8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="45dp"
         android:layout_marginTop="100dp"
         android:text="เพิ่มรูปของคุณ"
         android:textColor="@color/blue_main"
-        android:textSize="48sp"
+        android:textSize="36sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.104"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Subtitle TextView -->
     <TextView
         android:id="@+id/textView13"
         android:layout_width="wrap_content"
@@ -71,7 +74,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:background="@drawable/button"
+        android:background="@drawable/button_pressed"
         android:text="อัพโหลด"
         android:textColor="#FFFFFF"
         android:textStyle="bold"

@@ -13,8 +13,8 @@
         android:layout_marginEnd="12dp"
         android:text="ให้เราช่วยคุณ"
         android:textColor="#0DD7E9"
-        android:textSize="60sp"
-        android:layout_marginStart="36dp"
+        android:textSize="36sp"
+        android:layout_marginStart="12dp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/txtDescription"
         app:layout_constraintEnd_toEndOf="parent"
@@ -26,7 +26,7 @@
         android:id="@+id/txtDescription"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="12dp"
         android:layout_marginEnd="36dp"
         android:text="รับคำแนะนำการแก้ไขโปรไฟล์เพื่อรับประสบการณ์ที่ดีขึ้น"
         android:textColor="#000000"
@@ -38,8 +38,8 @@
 
     <ImageView
         android:id="@+id/imgMascot"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
         android:layout_marginTop="40dp"
         android:layout_marginStart="180dp"
         app:srcCompat="@drawable/ic_mascot"
@@ -80,29 +80,37 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnHelpNow"
-        android:layout_width="350dp"
+        android:layout_width="0dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginEnd="36dp"
         android:layout_height="wrap_content"
         android:text="ใช่แล้ว !"
         android:textSize="20sp"
         android:textColor="#FFFFFF"
         android:background="@drawable/button_pressed"
-        android:layout_marginTop="130dp"
+        android:layout_marginTop="60dp"
         app:layout_constraintTop_toBottomOf="@id/imgMascot"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnNotNow"
-        android:layout_width="350dp"
+        android:layout_width="0dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginEnd="36dp"
         android:layout_height="wrap_content"
-        android:text="ไว้ทีหลัง !"
-        android:textSize="20sp"
-        android:textColor="#000000"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="34dp"
         android:background="@drawable/button_normal"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/btnHelpNow"
+        android:text="ไว้ทีหลัง !"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.508"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/btnHelpNow"
+        app:layout_constraintVertical_bias="0.096" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

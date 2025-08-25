@@ -12,14 +12,14 @@
         android:id="@+id/textViewTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="170dp"
+        android:layout_marginTop="135dp"
         android:text="เกี่ยวกับคุณ"
         android:textAlignment="center"
         android:textColor="@color/blue_main"
-        android:textSize="45sp"
+        android:textSize="36sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.361"
+        app:layout_constraintHorizontal_bias="0.274"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -27,13 +27,14 @@
         android:id="@+id/textView8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="44dp"
         android:layout_marginTop="40dp"
         android:text="เพศ"
         android:textColor="#000000"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.172"
+        app:layout_constraintHorizontal_bias="0.045"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textViewTitle" />
 
@@ -42,7 +43,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="44dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/button_selector"
         android:text="ชาย"
         android:textColor="@drawable/text_selector"
@@ -55,7 +56,7 @@
         android:id="@+id/buttonFemale"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/button_selector"
         android:text="หญิง"
         android:textColor="@drawable/text_selector"
@@ -68,7 +69,7 @@
         android:id="@+id/buttonOther"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="44dp"
         android:background="@drawable/button_selector"
         android:text="อื่นๆ"
@@ -84,7 +85,7 @@
         android:id="@+id/textViewHeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="20dp"
         android:text="ส่วนสูง"
         android:textColor="#000000"
         android:textSize="20sp"
@@ -96,22 +97,22 @@
 
     <EditText
         android:id="@+id/editTextHeight"
-        android:layout_width="280dp"
+        android:layout_width="0dp"
         android:layout_height="50dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/edittext"
+        android:background="@drawable/button_normal"
         android:hint="ส่วนสูงของคุณ (cm)"
         android:inputType="number"
         android:paddingLeft="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/buttonOther"
+        app:layout_constraintStart_toStartOf="@id/textView8"
         app:layout_constraintTop_toBottomOf="@+id/textViewHeight" />
 
     <TextView
         android:id="@+id/textViewWeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="20dp"
         android:text="น้ำหนัก"
         android:textColor="#000000"
         android:textSize="20sp"
@@ -123,22 +124,22 @@
 
     <EditText
         android:id="@+id/editTextWeight"
-        android:layout_width="280dp"
+        android:layout_width="0dp"
         android:layout_height="50dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/edittext"
+        android:background="@drawable/button_normal"
         android:hint="น้ำหนักของคุณ (kg)"
         android:inputType="number"
         android:paddingLeft="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/buttonOther"
+        app:layout_constraintStart_toStartOf="@id/textView8"
         app:layout_constraintTop_toBottomOf="@+id/textViewWeight" />
 
     <TextView
         android:id="@+id/textViewPhoneNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="20dp"
         android:text="เบอร์โทร"
         android:textColor="#000000"
         android:textSize="20sp"
@@ -150,15 +151,15 @@
 
     <EditText
         android:id="@+id/editTextPhoneNumber"
-        android:layout_width="280dp"
+        android:layout_width="0dp"
         android:layout_height="50dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/edittext"
+        android:background="@drawable/button_normal"
         android:inputType="phone"
         android:hint="เบอร์ของคุณ"
         android:paddingLeft="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/buttonOther"
+        app:layout_constraintStart_toStartOf="@id/textView8"
         app:layout_constraintTop_toBottomOf="@+id/textViewPhoneNumber" />
 
     <ImageButton
@@ -167,6 +168,7 @@
         android:layout_height="100dp"
         android:layout_marginStart="40dp"
         android:layout_marginTop="50dp"
+        android:layout_marginBottom="90dp"
         android:background="@drawable/cyclebutton"
         android:scaleType="centerInside"
         android:scaleX="0.8"
@@ -175,6 +177,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.877"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextPhoneNumber" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
