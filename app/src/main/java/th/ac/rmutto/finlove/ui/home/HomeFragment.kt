@@ -669,6 +669,9 @@ class HomeFragment : Fragment() {
             }
 
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                // (ทางเลือก) log ไว้ดีบักถ้ามีปัญหา
+                val bodyStr = response.body?.string()
+                android.util.Log.d("DISLIKE", "code=${response.code} body=$bodyStr")
                 requireActivity().runOnUiThread {
                     if (response.isSuccessful) {
                         removeAndShowNextUser(currentIndex)
@@ -680,6 +683,10 @@ class HomeFragment : Fragment() {
         })
     }
 
+    private fun jsonOptIntAny(obj: JSONObject, vararg keys: String, fallback: Int = -1): Int {
+        for (k in keys) if (obj.has(k)) return obj.optInt(k, fallback)
+        return fallback
+    }
 
     private fun fetchUserByID(targetUserID: Int, callback: (User?) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -719,6 +726,14 @@ class HomeFragment : Fragment() {
                 if (response.isSuccessful && !responseBody.isNullOrEmpty()) {
                     val jsonObject = JSONObject(responseBody)
 
+                    // ★ รองรับทั้ง "UserID" และ "userID"
+                    val parsedId = jsonOptIntAny(jsonObject, "UserID", "userID", fallback = -1)
+                    if (parsedId <= 0) {
+                        Log.w("fetchUserByID", "invalid user id in payload: $jsonObject")
+                        withContext(Dispatchers.Main) { callback(null) }
+                        return@launch
+                    }
+
                     val imageFile = jsonObject.optString("imageFile")
                     val profilePicture = if (imageFile.startsWith("http")) {
                         imageFile
@@ -741,13 +756,15 @@ class HomeFragment : Fragment() {
                     }
 
                     val sharedPrefs = mutableListOf<String>().apply {
-                        jsonObject.optJSONArray("sharedPreferences")?.let { arr ->
+                        // ★ ฝั่งเซิร์ฟเวอร์บางที่ส่ง "shared_preferences"
+                        (jsonObject.optJSONArray("sharedPreferences")
+                            ?: jsonObject.optJSONArray("shared_preferences"))?.let { arr ->
                             for (j in 0 until arr.length()) add(arr.optString(j))
                         }
                     }
 
                     val user = User(
-                        jsonObject.optInt("userID"),
+                        parsedId, // ★ ใช้ parsedId ที่เชื่อถือได้
                         jsonObject.optString("nickname"),
                         profilePicture,
                         jsonObject.optString("DateBirth", ""),
