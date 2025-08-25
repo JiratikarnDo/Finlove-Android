@@ -46,6 +46,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import android.graphics.Color
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.request.RequestOptions
+import androidx.navigation.fragment.findNavController
 
 
 private fun optDoubleOrNull(obj: org.json.JSONObject, key: String): Double? {
@@ -197,6 +198,17 @@ class HomeFragment : Fragment() {
 
         Log.d("HomeFragment", "✅ Parsed birthDate: $birthDate")
         return age
+    }
+
+    // ===== helper กรองตามช่วงอายุที่ผู้ใช้ตั้งไว้ =====
+    private fun filterByAge(users: List<User>): List<User> {
+        val prefs = requireContext().getSharedPreferences("FinLovePrefs", android.content.Context.MODE_PRIVATE)
+        val minAge = prefs.getInt("age_min", 18)
+        val maxAge = prefs.getInt("age_max", 60)
+        return users.filter { u ->
+            val a = calculateAge(u.dateBirth)
+            a in minAge..maxAge
+        }
     }
 
     private fun checkAndRequestLocationPermission() {
@@ -787,6 +799,20 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun NoUsersDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("ไม่พบผู้ใช้ในช่วงอายุ")
+            .setMessage("ไม่เจอ user ตามขอบเขตอายุที่กำหนด กรุณาปรับช่วงอายุใหม่")
+            .setPositiveButton("ไปตั้งค่า") { d, _ ->
+                d.dismiss()
+                // ใช้ id ของหน้าตั้งค่าจริงใน nav_graph ของคุณ
+                findNavController().navigate(R.id.settingsFragment)
+                // หรือถ้ามี action ระหว่างหน้าปัจจุบัน → settings:
+                // findNavController().navigate(R.id.action_homeFragment_to_settingsFragment)
+            }
+            .show()
+    }
+
     // ดึงข้อมูลผู้ใช้ที่แนะนำ
     private fun fetchRecommendedUsers(callback: (List<User>) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -799,8 +825,14 @@ class HomeFragment : Fragment() {
                     Log.d("API Response", responseBody ?: "No response")
                     val safeBody = sanitizeJsonNumbers(responseBody)  // ← เพิ่มบรรทัดนี้
                     val recommendedUsers = parseUsers(safeBody)
+                    // ✨ กรองด้วยช่วงอายุที่ผู้ใช้ตั้งไว้
+                    val visible = filterByAge(recommendedUsers)
                     withContext(Dispatchers.Main) {
-                        callback(recommendedUsers)
+                        if (visible.isEmpty()) {
+                            NoUsersDialog()   // ← เด้ง popup + ไปหน้า Settings
+                        } else {
+                            callback(visible)
+                        }
                     }
                 } else {
                     withContext(Dispatchers.Main) {
