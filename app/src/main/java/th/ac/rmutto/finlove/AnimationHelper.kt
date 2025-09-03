@@ -11,6 +11,7 @@ import th.ac.rmutto.finlove.R // ตรวจสอบให้แน่ใจ�
 import android.view.animation.BounceInterpolator
 import android.animation.ValueAnimator
 import android.view.animation.LinearInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -171,6 +172,42 @@ object AnimationHelper { // ใช้ object เพื่อให้เรี�
             start()
         }
     }
+
+    /**
+     * อนิเมทเฉพาะ ImageView ใหม่ สไลด์เข้าจากขวา + เฟดอิน
+     * ปุ่มและข้อความรอบ ๆ จะไม่ขยับ
+     */
+    fun animateImageSlideInFromRight(
+        imageView: ImageView,
+        duration: Long = 360L,
+        onLoadNew: () -> Unit
+    ) {
+        // ยกเลิกอนิเมชันค้าง
+        imageView.animate().cancel()
+
+        // โหลดรูปใหม่เข้ามาก่อน
+        onLoadNew()
+
+        val screenW = imageView.resources.displayMetrics.widthPixels.toFloat()
+
+        // จุดเริ่ม: อยู่นอกจอขวา + จาง + scale เล็กนิด
+        imageView.translationX = screenW * 0.85f
+        imageView.alpha = 0f
+        imageView.scaleX = 0.97f
+        imageView.scaleY = 0.97f
+
+        val slideIn = ObjectAnimator.ofFloat(imageView, View.TRANSLATION_X, imageView.translationX, 0f)
+        val fadeIn  = ObjectAnimator.ofFloat(imageView, View.ALPHA, 0f, 1f)
+        val scaleX  = ObjectAnimator.ofFloat(imageView, View.SCALE_X, 0.97f, 1f)
+        val scaleY  = ObjectAnimator.ofFloat(imageView, View.SCALE_Y, 0.97f, 1f)
+
+        AnimatorSet().apply {
+            playTogether(slideIn, fadeIn, scaleX, scaleY)
+            this.duration = duration
+            interpolator = OvershootInterpolator(1.04f) // เด้งนุ่มๆ เล็กน้อย
+            start()
+        }
+    }
     /** สร้างชุดอนิเมชัน “ขยับเบา ๆ” สำหรับมาสคอต แต่ยังไม่ start */
     fun mascotIdle(
         target: View,
@@ -231,4 +268,5 @@ object AnimationHelper { // ใช้ object เพื่อให้เรี�
             rotation = 0f; scaleX = 1f; scaleY = 1f
         }
     }
+
 }

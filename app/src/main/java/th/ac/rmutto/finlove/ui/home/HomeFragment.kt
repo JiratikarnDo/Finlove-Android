@@ -47,6 +47,8 @@ import android.graphics.Color
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.request.RequestOptions
 import androidx.navigation.fragment.findNavController
+import android.widget.ImageView
+import th.ac.rmutto.finlove.utils.AnimationHelper.animateImageSlideInFromRight
 
 
 private fun optDoubleOrNull(obj: org.json.JSONObject, key: String): Double? {
@@ -352,25 +354,27 @@ class HomeFragment : Fragment() {
 // ใช้ขนาดเป้าหมายจริง ลดงานดีโคด
         val w = if (profileImage.width > 0) profileImage.width else resources.displayMetrics.widthPixels
         val h = if (profileImage.height > 0) profileImage.height else (w * 4) / 3  // ปรับอัตราส่วนตาม UI
+        val imageView = userView.findViewById<ImageView>(R.id.imageProfile)
 
-        Glide.with(requireContext())
-            .load(user.profilePicture)
-            .apply(
-                RequestOptions()
-                    .disallowHardwareConfig()
-                    .format(DecodeFormat.PREFER_RGB_565)
-                    .timeout(60000) // ✅ รอเครือข่ายนานขึ้น ลดโอกาส fail ก่อน อีกตัวจะตามขึ้น
-            )
-            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-            .skipMemoryCache(false)
-            .dontAnimate()
-            .override((w * 0.75f).toInt(), (h * 0.75f).toInt())
-            .centerCrop()
-            .placeholder(R.drawable.ic_user)
-            .fallback(R.drawable.ic_user) // ✅ ถ้า URL เป็น null จะไม่ขึ้น error ก่อน
-            .error(R.drawable.error)
-            .into(profileImage)
-
+        animateImageSlideInFromRight(imageView) {
+            Glide.with(requireContext())
+                .load(user.profilePicture)
+                .apply(
+                    RequestOptions()
+                        .disallowHardwareConfig()
+                        .format(DecodeFormat.PREFER_RGB_565)
+                        .timeout(60000) // ✅ รอเครือข่ายนานขึ้น ลดโอกาส fail ก่อน อีกตัวจะตามขึ้น
+                )
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                .skipMemoryCache(false)
+                .dontAnimate()
+                .override((w * 0.75f).toInt(), (h * 0.75f).toInt())
+                .centerCrop()
+                .placeholder(R.drawable.ic_user)
+                .fallback(R.drawable.ic_user) // ✅ ถ้า URL เป็น null จะไม่ขึ้น error ก่อน
+                .error(R.drawable.error)
+                .into(profileImage)
+        }
 
 
         // ตรวจสอบสถานะ verify และแสดงไอคอนเครื่องหมายถูกหาก verify == 1
