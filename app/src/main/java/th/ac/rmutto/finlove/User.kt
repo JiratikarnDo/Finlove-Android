@@ -21,6 +21,7 @@ data class User(
     val imageFile: String,
     @JsonAdapter(StringListAdapter::class)
     val preferences: List<String> = emptyList(),
+    val distance: Double? = null,   // 👈 ระยะทาง (เมตร) เป็น nullable
     val verify: Int,
 
     // ✅ เพิ่มฟิลด์พิกัดตำแหน่งของผู้ใช้

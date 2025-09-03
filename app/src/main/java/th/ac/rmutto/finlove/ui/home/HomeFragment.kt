@@ -444,10 +444,22 @@ class HomeFragment : Fragment() {
 
             val titledistance: TextView = userView.findViewById(R.id.titledistance)
 
-            if (myLat != null && myLng != null && user.latitude != null && user.longitude != null) {
-                val distanceKm = calculateDistance(myLat!!, myLng!!, user.latitude!!, user.longitude!!) / 1000
-                titledistance.text = String.format("ห่าง %.2f กม.", distanceKm)
+            // 1) ใช้ค่าที่ backend ส่งมาก่อน (หน่วย: เมตร)
+            if (user.distance != null) {
+                if (user.distance < 1.0) {
+                    titledistance.text = "ห่างจากคุณ: น้อยกว่า 1 กม."
+                } else {
+                    titledistance.text = String.format("ห่างจากคุณ: %.1f กม.", user.distance)
+                }
                 titledistance.visibility = View.VISIBLE
+
+// 2) ถ้าไม่มี distance ใน JSON ค่อย fallback คำนวณจากพิกัด
+            } else if (myLat != null && myLng != null && user.latitude != null && user.longitude != null) {
+                val km = calculateDistance(myLat!!, myLng!!, user.latitude!!, user.longitude!!)
+                titledistance.text = String.format("ห่างจากคุณ: %.1f กม.", km)
+                titledistance.visibility = View.VISIBLE
+
+// 3) ไม่งั้นไม่ทราบ
             } else {
                 titledistance.text = "ไม่ทราบระยะทาง"
                 titledistance.visibility = View.VISIBLE
@@ -493,6 +505,16 @@ class HomeFragment : Fragment() {
         return results[0] // หน่วย: เมตร
     }
 
+    private fun formatDistanceFromMeters(meters: Double?): String {
+        val safe = (meters ?: return "ไม่ทราบระยะทาง").coerceAtLeast(0.0)
+        return if (safe < 1.0) {
+            // ถ้าน้อยกว่า 1 กม.
+            "น้อยกว่า 1 กม."
+        } else {
+            val km = safe / 1000.0
+            String.format(Locale("th","TH"), "%.1f กม.", km)
+        }
+    }
 
     // ยืนยันการรายงานผู้ใช้
     private fun confirmReport(reportedID: Int, reportType: String) {
@@ -785,7 +807,8 @@ class HomeFragment : Fragment() {
                         optDoubleOrNull(jsonObject, "latitude"),
                         optDoubleOrNull(jsonObject, "longitude"),
                         allPreferences = allPrefs,
-                        sharedPreferences = sharedPrefs
+                        sharedPreferences = sharedPrefs,
+                        distance = optDoubleOrNull(jsonObject, "distance")   // ✅ ใช้ helper
                     )
 
                     withContext(Dispatchers.Main) { callback(user) }
@@ -881,7 +904,10 @@ class HomeFragment : Fragment() {
         }
     }
 
-
+    private fun optDoubleOrNull(obj: org.json.JSONObject, key: String): Double? {
+        val v = obj.optDouble(key, Double.NaN)
+        return if (v.isNaN()) null else v
+    }
 
     // แปลงข้อมูล JSON ที่ได้จาก API เป็นรายการผู้ใช้
     private fun parseUsers(responseBody: String?): List<User> {
@@ -924,6 +950,7 @@ class HomeFragment : Fragment() {
                 }
 
                 Log.d("parseUsers", "User $i imageFile: $imageFile")  // เพิ่มบรรทัดนี้
+                Log.d("parseUsers", "User $i distance(raw)=${jsonObject.opt("distance")}")
 
                 val user = User(
                     jsonObject.getInt("UserID"),
@@ -935,8 +962,8 @@ class HomeFragment : Fragment() {
                     optDoubleOrNull(jsonObject, "latitude"),     // ✅ กลายเป็น null ถ้า NaN/ไม่มีค่า
                     optDoubleOrNull(jsonObject, "longitude"),    // ✅,
                     allPreferences = allPrefs,           // << ใส่ค่าเพิ่ม
-                    sharedPreferences = sharedPrefs      // << ใส่ค่าเพิ่ม
-
+                    sharedPreferences = sharedPrefs,      // << ใส่ค่าเพิ่ม
+                    distance = optDoubleOrNull(jsonObject, "distance")   // ✅ ใช้ helper
                 )
                 users.add(user)
             }
@@ -976,7 +1003,7 @@ data class User(
     val preferences: List<String> = emptyList(), // ← เพิ่มตรงนี้
     val latitude: Double? = null,        // เพิ่มตรงนี้
     val longitude: Double? = null,        // เพิ่มตรงนี้
-
+    val distance: Double? = null,
     val allPreferences: List<String> = emptyList(),
     val sharedPreferences: List<String> = emptyList()
 )

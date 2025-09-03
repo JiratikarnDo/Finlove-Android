@@ -609,6 +609,7 @@ class ProfileFragment : Fragment() {
 
     private fun parseUserInfo(responseBody: String?): User {
         val jsonObject = JSONObject(responseBody ?: "{}")
+        val distance = jsonObject.optDouble("distance", 0.0)
         return User(
             id = jsonObject.optInt("id", -1),
             username = jsonObject.optString("username", ""),
@@ -627,7 +628,8 @@ class ProfileFragment : Fragment() {
             imageFile = jsonObject.optString("imageFile", ""),
             verify = jsonObject.optInt("verify", 0) , // ✅ เพิ่มตรงนี้
             longitude = jsonObject.optDouble("longitude", 0.0),
-            latitude = jsonObject.optDouble("latitude", 0.0)
+            latitude = jsonObject.optDouble("latitude", 0.0),
+            distance = distance // Pass the parsed distance here
 
         )
     }

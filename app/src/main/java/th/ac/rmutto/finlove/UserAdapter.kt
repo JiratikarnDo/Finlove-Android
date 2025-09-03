@@ -54,6 +54,7 @@ class UserAdapter(private val users: List<User>, private val currentUserID: Int)
         private val likeButton: ImageButton = itemView.findViewById(R.id.buttonLike)
         private val ageTextView: TextView = itemView.findViewById(R.id.textAge)
         private val dislikeButton: ImageButton = itemView.findViewById(R.id.buttonDislike)
+        private val distanceTextView: TextView = itemView.findViewById(R.id.titledistance) // อ้างอิง TextView ที่ใช้แสดงระยะทาง
 
         // ฟังก์ชัน bind สำหรับกำหนดข้อมูลให้กับ View
         fun bind(user: User, currentUserID: Int) {
@@ -93,6 +94,8 @@ class UserAdapter(private val users: List<User>, private val currentUserID: Int)
             Log.d("UserAdapter", "user.dateBirth = ${user.dateBirth}")
             Log.d("UserAdapter", "calculated age = $age")
 
+            distanceTextView.text = "ห่างจากคุณ: ${formatDistanceFromMeters(user.distance)}"
+
             // กดชอบผู้ใช้
             likeButton.setOnClickListener {
                 likeUser(user.id, currentUserID) // ส่ง id ของผู้ใช้ที่ต้องการชอบ
@@ -103,6 +106,18 @@ class UserAdapter(private val users: List<User>, private val currentUserID: Int)
                 dislikeUser(user.id, currentUserID) // ส่ง id ของผู้ใช้ที่ต้องการไม่ชอบ
             }
 
+        }
+
+        private fun formatDistanceFromMeters(meters: Double?): String {
+            if (meters == null) return "ไม่ทราบ"
+            return if (meters < 1000.0) {
+                // แสดงเป็นเมตร
+                "${meters.toInt()} ม."
+            } else {
+                // แสดงเป็นกม. ทศนิยม 1 ตำแหน่ง
+                val km = meters / 1000.0
+                String.format(Locale("th", "TH"), "%.1f กม.", km)
+            }
         }
 
         // ฟังก์ชันที่ใช้ในการส่ง HTTP POST ไปยัง api_v2
