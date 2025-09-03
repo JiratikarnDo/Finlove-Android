@@ -505,6 +505,26 @@ class HomeFragment : Fragment() {
         return results[0] // หน่วย: เมตร
     }
 
+    private fun getMaxDistanceKm(): Double {
+        val prefs = requireContext().getSharedPreferences("FinLovePrefs", android.content.Context.MODE_PRIVATE)
+        return prefs.getFloat("max_distance_km", 50f).toDouble()
+    }
+
+    private fun filterByDistance(users: List<User>): List<User> {
+        val maxKm = getMaxDistanceKm()
+        val myLat_ = myLat
+        val myLng_ = myLng
+
+        return users.filter { u ->
+            u.distance?.let { km -> return@filter km >= 0.0 && km <= maxKm }
+            if (myLat_ != null && myLng_ != null && u.latitude != null && u.longitude != null) {
+                val km = calculateDistance(myLat_, myLng_, u.latitude!!, u.longitude!!) // คืนเป็น "กม."
+                return@filter km >= 0.0 && km <= maxKm
+            }
+            false
+        }
+    }
+
     private fun formatDistanceFromMeters(meters: Double?): String {
         val safe = (meters ?: return "ไม่ทราบระยะทาง").coerceAtLeast(0.0)
         return if (safe < 1.0) {
@@ -824,8 +844,8 @@ class HomeFragment : Fragment() {
 
     private fun NoUsersDialog() {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("ไม่พบผู้ใช้ในช่วงอายุ")
-            .setMessage("ไม่เจอ user ตามขอบเขตอายุที่กำหนด กรุณาปรับช่วงอายุใหม่")
+            .setTitle("ไม่พบผู้ใช้")
+            .setMessage("กรุณาปรับช่วงอายุ และ กำหนดขอบเขตระยะทางเพิ่ม")
             .setPositiveButton("ไปตั้งค่า") { d, _ ->
                 d.dismiss()
                 // ใช้ id ของหน้าตั้งค่าจริงใน nav_graph ของคุณ
@@ -849,7 +869,9 @@ class HomeFragment : Fragment() {
                     val safeBody = sanitizeJsonNumbers(responseBody)  // ← เพิ่มบรรทัดนี้
                     val recommendedUsers = parseUsers(safeBody)
                     // ✨ กรองด้วยช่วงอายุที่ผู้ใช้ตั้งไว้
-                    val visible = filterByAge(recommendedUsers)
+                    val visibleByAge = filterByAge(recommendedUsers)
+                    // 2) กรองด้วยระยะทาง (ดึง max_distance_km จาก SharedPreferences)
+                    val visible = filterByDistance(visibleByAge)
                     withContext(Dispatchers.Main) {
                         if (visible.isEmpty()) {
                             NoUsersDialog()   // ← เด้ง popup + ไปหน้า Settings

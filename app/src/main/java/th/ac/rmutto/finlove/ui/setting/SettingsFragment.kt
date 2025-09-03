@@ -15,6 +15,7 @@ import th.ac.rmutto.finlove.LoginActivity
 import com.google.android.material.slider.RangeSlider
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.widget.EditText
 import th.ac.rmutto.finlove.ui.home.HomeFragment
 import androidx.navigation.fragment.findNavController
 
@@ -31,6 +32,7 @@ class SettingsFragment : Fragment() {
     private val PREF_NAME = "FinLovePrefs"
     private val KEY_MIN_AGE = "age_min"
     private val KEY_MAX_AGE = "age_max"
+    private val KEY_MAX_DISTANCE_KM = "max_distance_km"
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,6 +40,7 @@ class SettingsFragment : Fragment() {
         val ageSlider = view.findViewById<RangeSlider>(R.id.ageRangeSlider)
         val ageValueText = view.findViewById<TextView>(R.id.ageValueText)
         val saveButton = view.findViewById<Button>(R.id.saveButton)   // ← ปุ่มบันทึก
+        val distanceEdit = view.findViewById<EditText>(R.id.distanceStart)
 
         val prefs = requireContext().getSharedPreferences(PREF_NAME, android.content.Context.MODE_PRIVATE)
 
@@ -70,21 +73,45 @@ class SettingsFragment : Fragment() {
                 .apply()
         }
 
+        // ----- ระยะทาง (กม.) -----
+        // โหลดค่าที่เคยบันทึก; ถ้าไม่มี ใช้ 50 กม. เป็นค่าเริ่มต้น
+        val savedMaxDistance = prefs.getFloat(KEY_MAX_DISTANCE_KM, 100f)
+        distanceEdit.setText(
+            if (savedMaxDistance % 1f == 0f) savedMaxDistance.toInt().toString()
+            else savedMaxDistance.toString()
+        )
+
         // กด "บันทึก" → เก็บลง prefs
         saveButton.setOnClickListener {
             val minAge = ageSlider.values[0].toInt()
             val maxAge = ageSlider.values[1].toInt()
+
+            // ระยะทาง
+            val kmText = distanceEdit.text?.toString()?.trim()
+            val km = kmText?.toFloatOrNull()
+            if (km == null || km <= 0f) {
+                Toast.makeText(requireContext(), "กรุณาใส่ระยะทางมากกว่า 0 กม.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            // กันค่ามากเกินจริง เช่น > 500 กม.
+            val MAX_ALLOWED_KM = 100000f
+            val kmClamped = km.coerceIn(1f, MAX_ALLOWED_KM)
+
+            // ✅ อัปเดตกลับไปที่ EditText ให้เห็นค่าที่ถูก clamp แล้ว
+            distanceEdit.setText(
+                if (kmClamped % 1f == 0f) kmClamped.toInt().toString() else kmClamped.toString()
+            )
             prefs.edit()
                 .putInt(KEY_MIN_AGE, minAge)
                 .putInt(KEY_MAX_AGE, maxAge)
+                .putFloat(KEY_MAX_DISTANCE_KM, kmClamped)
                 .apply()
 
             // เด้ง Popup
             androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("สำเร็จ")
-                .setMessage("คุณจะเจอผู้คนที่อายุ $minAge - $maxAge ปี")
-                .setPositiveButton("ตกลง") { dialog, _ ->
-                    dialog.dismiss()
+                .setTitle("ตั้งค่าสำเร็จ")
+                .setMessage("คุณจะเจอคนอายุ $minAge-$maxAge ปี และห่างจากคุณไม่เกิน ${kmClamped} กม.")
+                .setPositiveButton("ตกลง") { d, _ -> d.dismiss()
                 }
                 .show()   // <<<<<< ต้องมี
         }
