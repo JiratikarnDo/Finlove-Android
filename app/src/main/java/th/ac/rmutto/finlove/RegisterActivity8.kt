@@ -19,6 +19,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import java.io.File
+import android.view.LayoutInflater
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
+import okhttp3.FormBody
 
 class RegisterActivity8 : AppCompatActivity() {
     private var selectedImageUri: Uri? = null
@@ -94,45 +98,135 @@ class RegisterActivity8 : AppCompatActivity() {
                     .addFormDataPart("goalID", goalID.toString())
                     .addFormDataPart("interestGenderID", interestGenderID.toString()) // เพิ่ม interestGenderID
                     // ----- ฟิลด์ใหม่ -----
-                    .addFormDataPart("weight",   (weight ?: "").trim())             // ถ้า backend เอาเลข ให้ parse ตอนฝั่ง server
-                    .addFormDataPart("status",   career ?: "ไม่ระบุ")               // ถ้าใช้ id: เปลี่ยนเป็น status_id.toString()
+                    .addFormDataPart("weight",   (weight ?: "").trim())
+                    .addFormDataPart("status",   career ?: "ไม่ระบุ")  // ถ้า backend ไม่ใช้ status จะลบทิ้งก็ได้
+                    .addFormDataPart("career_id", careerId.toString())  // << เพิ่มบรรทัดนี้ สำคัญ
                     .addFormDataPart("province", province ?: "")
-                    .addPart(body) // เพิ่มไฟล์ภาพใน Body
+                    .addPart(body)
                     .build()
 
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val client = OkHttpClient()
-                        val rootUrl = getString(R.string.root_url) // ดึงค่า root_url จาก strings.xml
-                        val url = "$rootUrl/api_v2/register8" // ประกอบ URL กับ path ที่ต้องการ
-                        val request = Request.Builder()
-                            .url(url)
-                            .post(jsonBody)
-                            .build()
+// เปิด Popup OTP จากไฟล์ dialog_otp.xml
+                val view = LayoutInflater.from(this).inflate(R.layout.dialog_otp, null, false)
+                val edtOtp = view.findViewById<EditText>(R.id.edtOtp)
+                val btnVerify = view.findViewById<Button>(R.id.btnVerify)
+// ถ้ามีปุ่มส่งใหม่ใน XML
+                val btnResend = view.findViewById<Button>(R.id.btnResend)
 
-                        val response = client.newCall(request).execute()
+                val dialog = AlertDialog.Builder(this)
+                    .setView(view)
+                    .setCancelable(false)
+                    .create()
 
-                        withContext(Dispatchers.Main) {
-                            if (response.isSuccessful) {
-                                Toast.makeText(this@RegisterActivity8, "ข้อมูลถูกบันทึกแล้ว", Toast.LENGTH_LONG).show()
+// 1) ตอนเปิด dialog → ยิง register เพื่อ "insert + ส่ง OTP"
+                dialog.setOnShowListener {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val client = OkHttpClient()
+                            val rootUrl = getString(R.string.root_url)
+                            val url = "$rootUrl/api_v2/register8"
+                            val request = Request.Builder().url(url).post(jsonBody).build()
+                            val response = client.newCall(request).execute()
+                            val code = response.code
+                            val bodyStr = response.body?.string() ?: ""
 
-                                // ดีเลย์ 1 วินาทีก่อนเปลี่ยนหน้า
-                                kotlinx.coroutines.delay(500)
+                            withContext(Dispatchers.Main) {
+                                if (response.isSuccessful) {
+                                    Toast.makeText(this@RegisterActivity8, "ส่งรหัสแล้ว กรุณาตรวจอีเมล", Toast.LENGTH_SHORT).show()
+                                    // ปล่อยให้ผู้ใช้กรอก OTP ต่อได้ตามปกติ (อย่า dismiss ตรงนี้)
+                                } else {
+                                    // โชว์รายละเอียดให้รู้ชัด ๆ ว่าพลาดตรงไหน
+                                    Toast.makeText(
+                                        this@RegisterActivity8,
+                                        "สมัครไม่สำเร็จ ($code): $bodyStr",
+                                        Toast.LENGTH_LONG
+                                    ).show()
 
-                                val intent = Intent(this@RegisterActivity8, FirstPageActivity::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                startActivity(intent)
-                            } else {
-                                Toast.makeText(this@RegisterActivity8, "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้", Toast.LENGTH_LONG).show()
+                                    // เคสที่แก้ในแอปไม่ได้ (เช่น 409/404) ค่อยปิด dialog
+                                    if (code == 409 || code == 404) {
+                                        // 409 = อีเมล/ชื่อผู้ใช้ซ้ำ, 404 = เพศไม่พบ
+                                        // คุณอาจจะเปิดหน้าก่อนหน้ากลับไปแก้ค่า หรือปิด popup เฉย ๆ
+                                        dialog.dismiss()
+                                    }
+                                    // สำหรับ 400 (ฟิลด์ไม่ครบ), 413 (ไฟล์ใหญ่), 422 ฯลฯ
+                                    // คง dialog ไว้เพื่อให้ผู้ใช้แก้ได้ (หรือคุณจะปิดก็ได้ถ้าต้องการ)
+                                }
                             }
-                        }
-
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@RegisterActivity8, "เกิดข้อผิดพลาด: ${e.message}", Toast.LENGTH_LONG).show()
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    this@RegisterActivity8,
+                                    "เกิดข้อผิดพลาดเครือข่าย: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                dialog.dismiss()
+                            }
                         }
                     }
                 }
+
+// 2) ผู้ใช้กด “ยืนยัน” → เรียก verify-otp
+                btnVerify.setOnClickListener {
+                    val code = edtOtp.text?.toString()?.trim().orEmpty()
+                    if (code.length != 6) {
+                        Toast.makeText(this, "กรุณาใส่รหัสให้ครบ 6 หลัก", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val client = OkHttpClient()
+                            val rootUrl = getString(R.string.root_url)
+                            val vUrl = "$rootUrl/auth/verify-otp"   // ถ้า path ของคุณต่างไป แก้ตรงนี้
+                            val form = FormBody.Builder()
+                                .add("email", email!!)   // ใช้ email เดิมที่อ่านมาด้านบน
+                                .add("otp", code)
+                                .build()
+                            val req = Request.Builder().url(vUrl).post(form).build()
+                            val res = client.newCall(req).execute()
+
+                            withContext(Dispatchers.Main) {
+                                if (res.isSuccessful) {
+                                    Toast.makeText(this@RegisterActivity8, "ยืนยันสำเร็จ", Toast.LENGTH_SHORT).show()
+                                    dialog.dismiss()
+
+                                    // ไปหน้าแรกหลังยืนยันสำเร็จ
+                                    val intent = Intent(this@RegisterActivity8, FirstPageActivity::class.java)
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    startActivity(intent)
+                                } else {
+                                    Toast.makeText(this@RegisterActivity8, "รหัสไม่ถูกต้องหรือหมดอายุ", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@RegisterActivity8, "เกิดข้อผิดพลาด: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
+
+// (ตัวเลือก) 3) ปุ่ม “ส่งใหม่” ถ้าคุณมี endpoint แยก /auth/send-otp
+                btnResend?.setOnClickListener {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val client = OkHttpClient()
+                            val rootUrl = getString(R.string.root_url)
+                            val rUrl = "$rootUrl/auth/send-otp"  // ปรับตามของคุณ
+                            val form = FormBody.Builder().add("email", email!!).build()
+                            val req = Request.Builder().url(rUrl).post(form).build()
+                            client.newCall(req).execute()
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@RegisterActivity8, "ส่งรหัสใหม่แล้ว", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (_: Exception) {
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@RegisterActivity8, "ส่งรหัสใหม่ไม่สำเร็จ", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
+
+                dialog.show()
             }
         }
     }

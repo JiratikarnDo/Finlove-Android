@@ -20,9 +20,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
+import androidx.lifecycle.lifecycleScope
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
+
 class OtherProfileActivity : AppCompatActivity() {
 
     private lateinit var profileImageView: ImageView
@@ -30,6 +32,8 @@ class OtherProfileActivity : AppCompatActivity() {
     private lateinit var lastNameTextView: TextView
     private lateinit var nicknameTextView: TextView
     private lateinit var genderTextView: TextView
+    private lateinit var weightTextView: TextView
+    private lateinit var heightTextView: TextView
     private lateinit var preferencesContainer: LinearLayout
     private lateinit var reportButton: Button
     private lateinit var verifiedIcon: ImageView
@@ -45,6 +49,8 @@ class OtherProfileActivity : AppCompatActivity() {
         firstNameTextView = findViewById(R.id.textViewFirstName)
         lastNameTextView = findViewById(R.id.textViewLastName)
         nicknameTextView = findViewById(R.id.textViewNickname)
+        weightTextView = findViewById(R.id.textViewWeight)
+        heightTextView = findViewById(R.id.textViewHeight)
         genderTextView = findViewById(R.id.textViewGender)
         preferencesContainer = findViewById(R.id.preferenceContainer)
         reportButton = findViewById(R.id.buttonReportUser)
@@ -78,11 +84,16 @@ class OtherProfileActivity : AppCompatActivity() {
                     val responseBody = response.body?.string()
                     val jsonObject = JSONObject(responseBody ?: "{}")
 
+                    // ✅ เพิ่มบรรทัดนี้เพื่อรองรับทั้งกรณีมี "data" และไม่มี
+                    val obj = if (jsonObject.has("data") && jsonObject.opt("data") is JSONObject)
+                        jsonObject.getJSONObject("data") else jsonObject
                     // Extract data from JSON response
                     val firstName = jsonObject.optString("firstname")
                     val lastName = jsonObject.optString("lastname")
                     val nickname = jsonObject.optString("nickname")
                     val gender = jsonObject.optString("gender")
+                    val height = obj.optDouble("height", Double.NaN)     // ✅ แก้จาก jsonObject → obj
+                    val weight = obj.optDouble("weight", Double.NaN)
                     val preferences = jsonObject.optString("preferences")
                     var profileImage = jsonObject.optString("imageFile")
                     val isVerified = jsonObject.optInt("verify", 0) == 1
@@ -101,6 +112,11 @@ class OtherProfileActivity : AppCompatActivity() {
                         lastNameTextView.text = "นามสกุล: $lastName"
                         nicknameTextView.text = "ชื่อเล่น: $nickname"
                         genderTextView.text = "เพศ: $gender"
+
+                        // ✅ เติมการแสดงผลส่วนสูง/น้ำหนักแบบกัน NaN
+                        heightTextView.text = "ส่วนสูง: " + if (height.isNaN()) "—" else "${height.toInt()} ซม."
+                        weightTextView.text = "น้ำหนัก: " + if (weight.isNaN()) "—" else "${weight.toInt()} กก."
+
 
                         // Load profile image using Glide
                         Glide.with(this@OtherProfileActivity)

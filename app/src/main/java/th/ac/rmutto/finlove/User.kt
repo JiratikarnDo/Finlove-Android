@@ -14,6 +14,7 @@ data class User(
     val gender: String,
     val interestGender: String,
     val height: Double,
+    val weight: Double,
     val home: String,
     @SerializedName("DateBirth") val dateBirth: String,
     val education: String,

@@ -124,7 +124,7 @@
                 android:layout_height="25dp"
                 android:layout_marginEnd="5dp"
                 android:contentDescription="Verified Badge"
-                android:src="@drawable/verify"
+                android:src="@drawable/identify"
                 android:visibility="visible"
                 app:layout_constraintEnd_toEndOf="@+id/imageViewProfile"
                 app:layout_constraintTop_toTopOf="@+id/imageViewProfile" />
@@ -452,6 +452,35 @@
             app:layout_constraintBaseline_toBaselineOf="@id/textViewHeight"
             app:layout_constraintTop_toBottomOf="@+id/spinnerEducation" />
 
+        <TextView
+            android:id="@+id/labelWeight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="น้ำหนัก:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/textViewWeight"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/textViewWeight"
+            app:layout_constraintTop_toBottomOf="@+id/labelHeight" />
+
+        <EditText
+            android:id="@+id/textViewWeight"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:hint="Weight"
+            android:padding="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.675"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textViewHeight" />
+
         <!-- Home -->
         <EditText
             android:id="@+id/textViewHeight"
@@ -496,7 +525,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.684"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textViewHeight" />
+            app:layout_constraintTop_toBottomOf="@id/textViewWeight" />
 
         <TextView
             android:id="@+id/labelInterest"

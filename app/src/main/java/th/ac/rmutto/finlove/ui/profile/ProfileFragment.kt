@@ -46,6 +46,7 @@ class ProfileFragment : Fragment() {
     private lateinit var textViewLastName: EditText
     private lateinit var spinnerGender: Spinner
     private lateinit var textViewHeight: EditText
+    private lateinit var textViewWeight: EditText
     private lateinit var textViewHome: EditText
     private lateinit var buttonSelectDateProfile: Button
     private lateinit var imageViewProfile: ImageView
@@ -59,6 +60,7 @@ class ProfileFragment : Fragment() {
     private lateinit var labelEducation: TextView
     private lateinit var labelGoal: TextView
     private lateinit var labelHeight: TextView
+    private lateinit var labelWeight: TextView
     private lateinit var labelHome: TextView
     private lateinit var labelInterest: TextView
     private lateinit var labelDate: TextView
@@ -117,12 +119,14 @@ class ProfileFragment : Fragment() {
         spinnerGender = root.findViewById(R.id.spinnerGender)
         spinnerInterestGender = root.findViewById(R.id.spinnerInterestGender)
         textViewHeight = root.findViewById(R.id.textViewHeight)
+        textViewWeight = root.findViewById(R.id.textViewWeight)
         textViewHome = root.findViewById(R.id.textViewHome)
         labelUsername = root.findViewById(R.id.labelUsername)
         labelEmail = root.findViewById(R.id.labelEmail)
         labelEducation = root.findViewById(R.id.labelEducation)
         labelGoal = root.findViewById(R.id.labelGoal)
         labelHeight = root.findViewById(R.id.labelHeight)
+        labelWeight = root.findViewById(R.id.labelWeight)
         labelHome = root.findViewById(R.id.labelHome)
         labelInterest = root.findViewById(R.id.labelInterest)
         labelDate = root.findViewById(R.id.labelDate)
@@ -328,6 +332,7 @@ class ProfileFragment : Fragment() {
         textViewUsername.setText(user.username)
         textViewEmail.setText(user.email)
         textViewHeight.setText(user.height.toString())
+        textViewWeight.setText(user.weight.toString())
         textViewHome.setText(user.home)
         buttonSelectDateProfile.text = user.dateBirth
 
@@ -380,7 +385,6 @@ class ProfileFragment : Fragment() {
             try {
                 val client = OkHttpClient()
 
-
                 // ใช้ gender_value_array แทน selected text ตรงๆ
                 val genderValueArray = resources.getStringArray(R.array.gender_array)
                 val selectedGender = genderValueArray[spinnerGender.selectedItemPosition]
@@ -404,6 +408,7 @@ class ProfileFragment : Fragment() {
                     .addFormDataPart("education", selectedEducation)
                     .addFormDataPart("goal", selectedGoal)
                     .addFormDataPart("height", textViewHeight.text.toString())
+                    .addFormDataPart("weight", textViewWeight.text.toString())
                     .addFormDataPart("home", textViewHome.text.toString())
 
                 formattedDateBirth?.let {
@@ -489,6 +494,8 @@ class ProfileFragment : Fragment() {
         textViewFirstName.isFocusableInTouchMode = enabled
         textViewLastName.isFocusable = enabled
         textViewLastName.isFocusableInTouchMode = enabled
+        textViewWeight.isFocusable = enabled
+        textViewWeight.isFocusableInTouchMode = enabled
         textViewHeight.isFocusable = enabled
         textViewHeight.isFocusableInTouchMode = enabled
         textViewHome.isFocusable = enabled
@@ -510,11 +517,13 @@ class ProfileFragment : Fragment() {
         labelEducation.visibility = View.VISIBLE
         labelGoal.visibility = View.VISIBLE
         labelHeight.visibility = View.VISIBLE
+        labelWeight.visibility = View.VISIBLE
         labelHome.visibility = View.VISIBLE
         labelInterest.visibility = View.VISIBLE
         labelDate.visibility = View.VISIBLE
         textViewEmail.visibility = View.VISIBLE
         textViewHeight.visibility = View.VISIBLE
+        textViewWeight.visibility = View.VISIBLE
         textViewHome.visibility = View.VISIBLE
         buttonSelectDateProfile.visibility = View.VISIBLE
         spinnerGoal.visibility = View.VISIBLE
@@ -529,10 +538,12 @@ class ProfileFragment : Fragment() {
         labelEducation.visibility = View.GONE
         labelGoal.visibility = View.GONE
         labelHeight.visibility = View.GONE
+        labelWeight.visibility = View.GONE
         labelHome.visibility = View.GONE
         labelInterest.visibility = View.GONE
         labelDate.visibility = View.GONE
         textViewHeight.visibility = View.GONE
+        textViewWeight.visibility = View.GONE
         textViewHome.visibility = View.GONE
         buttonSelectDateProfile.visibility = View.GONE
         spinnerGoal.visibility = View.GONE
@@ -623,6 +634,7 @@ class ProfileFragment : Fragment() {
             goal = jsonObject.optString("goal", ""),
             preferences = listOf(jsonObject.optString("preferences", "")),
             height = jsonObject.optDouble("height", 0.0),
+            weight = jsonObject.optDouble("weight", 0.0),   // ✅ เพิ่มตรงนี้
             home = jsonObject.optString("home", ""),
             dateBirth = jsonObject.optString("DateBirth", ""),
             imageFile = jsonObject.optString("imageFile", ""),
