@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:text="คุณแน่ใจหรือไม่ว่าจะชวนออกเดท?"
             android:textColor="@color/black"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 

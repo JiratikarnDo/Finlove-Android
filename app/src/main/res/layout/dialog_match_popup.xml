@@ -43,7 +43,7 @@
         android:layout_width="200dp"
         android:layout_height="20dp"
         android:text="ยินดีด้วย คุณ Match กับผู้ใช้นี้แล้ว!\nแชทกับผู้ใช้นี้ได้แล้ว!"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textColor="@color/black"
         android:layout_marginBottom="12dp"
         app:layout_constraintStart_toStartOf="@id/tvMain"

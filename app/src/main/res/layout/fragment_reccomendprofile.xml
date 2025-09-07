@@ -30,7 +30,7 @@
         android:layout_marginEnd="36dp"
         android:text="รับคำแนะนำการแก้ไขโปรไฟล์เพื่อรับประสบการณ์ที่ดีขึ้น"
         android:textColor="#000000"
-        android:textSize="22sp"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/txttitle"
