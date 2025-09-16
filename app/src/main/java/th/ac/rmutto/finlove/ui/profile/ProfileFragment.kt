@@ -35,6 +35,8 @@ import th.ac.rmutto.finlove.User
 import java.util.*
 import androidx.navigation.fragment.findNavController
 import androidx.appcompat.widget.AppCompatButton
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 
 
 class ProfileFragment : Fragment() {
@@ -252,6 +254,8 @@ class ProfileFragment : Fragment() {
             Glide.with(this)
                 .load(selectedImageUri) // URL ควรมาจาก server
                 .placeholder(R.drawable.img_1)
+                .format(DecodeFormat.PREFER_RGB_565)
+                .downsample(DownsampleStrategy.AT_MOST)
                 .error(R.drawable.error)
                 .into(imageViewProfile)
 

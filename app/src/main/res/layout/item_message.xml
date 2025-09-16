@@ -4,7 +4,8 @@
     android:layout_marginBottom="8dp"
     android:background="@drawable/button_normal"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:elevation="8dp"
+    android:padding="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -61,13 +62,13 @@
         <!-- ปรับขนาดและสไตล์ปุ่มลบ -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/buttonDeleteChat"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:background="@drawable/button_pressed"
+            android:layout_width="40dp"
+            android:layout_height="30dp"
+            android:background="@drawable/button_normal"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
-            android:textSize="14sp"
-            android:text="ลบแชท"
-            android:textColor="@android:color/white" />
+            android:textSize="12sp"
+            android:text="-"
+            android:textColor="@android:color/holo_red_light" />
     </LinearLayout>
 </LinearLayout>

@@ -34,6 +34,8 @@ class OtherProfileActivity : AppCompatActivity() {
     private lateinit var genderTextView: TextView
     private lateinit var weightTextView: TextView
     private lateinit var heightTextView: TextView
+    private lateinit var provinceTextView: TextView
+    private lateinit var careerTextView: TextView
     private lateinit var preferencesContainer: LinearLayout
     private lateinit var reportButton: Button
     private lateinit var verifiedIcon: ImageView
@@ -51,6 +53,8 @@ class OtherProfileActivity : AppCompatActivity() {
         nicknameTextView = findViewById(R.id.textViewNickname)
         weightTextView = findViewById(R.id.textViewWeight)
         heightTextView = findViewById(R.id.textViewHeight)
+        provinceTextView = findViewById(R.id.textViewProvince)
+        careerTextView = findViewById(R.id.textViewCareer)
         genderTextView = findViewById(R.id.textViewGender)
         preferencesContainer = findViewById(R.id.preferenceContainer)
         reportButton = findViewById(R.id.buttonReportUser)
@@ -83,6 +87,15 @@ class OtherProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     val jsonObject = JSONObject(responseBody ?: "{}")
+                    val gender = jsonObject.optString("gender")
+
+                    // แปลงค่าจากฐานข้อมูล (male, female, other) เป็นคำที่เข้าใจได้
+                    val displayGender = when (gender.toLowerCase()) {
+                        "male" -> "ชาย"
+                        "female" -> "หญิง"
+                        "other" -> "อื่นๆ"
+                        else -> "ไม่ระบุ"
+                    }
 
                     // ✅ เพิ่มบรรทัดนี้เพื่อรองรับทั้งกรณีมี "data" และไม่มี
                     val obj = if (jsonObject.has("data") && jsonObject.opt("data") is JSONObject)
@@ -91,9 +104,11 @@ class OtherProfileActivity : AppCompatActivity() {
                     val firstName = jsonObject.optString("firstname")
                     val lastName = jsonObject.optString("lastname")
                     val nickname = jsonObject.optString("nickname")
-                    val gender = jsonObject.optString("gender")
                     val height = obj.optDouble("height", Double.NaN)     // ✅ แก้จาก jsonObject → obj
                     val weight = obj.optDouble("weight", Double.NaN)
+                    val province = obj.optString("province", "")  // ดึงข้อมูลจังหวัดจาก JSON
+                    val careerId    = if (obj.has("careerId") && !obj.isNull("careerId")) obj.optInt("careerId") else null
+                    val careerName  = obj.optString("careerName", "")
                     val preferences = jsonObject.optString("preferences")
                     var profileImage = jsonObject.optString("imageFile")
                     val isVerified = jsonObject.optInt("verify", 0) == 1
@@ -103,20 +118,32 @@ class OtherProfileActivity : AppCompatActivity() {
                         profileImage = getString(R.string.root_url) + "/api_v2/user/image/" + profileImage
                     }
 
+                    Log.d("API Response", "Province: $province")
+                    Log.d("API Response", "career: $careerId")
                     // Log the profileImage URL to ensure it's correct
                     Log.d("OtherProfileActivity", "Profile Image URL: $profileImage")
 
                     // Update UI on the main thread
                     withContext(Dispatchers.Main) {
+                        // province (แก้เช็คให้ถูก: optString ไม่มีวันเป็น null)
+                        val displayProvince = if (province.isBlank()) "ไม่ทราบจังหวัด" else province
+                        provinceTextView.text = "จังหวัด: $displayProvince"
+
+                        // ✅ career
+                        val displayCareer = when {
+                            careerName.isNotBlank() -> careerName
+                            else                    -> "ไม่ทราบอาชีพ"
+                        }
+                        careerTextView.text = "อาชีพ: $displayCareer"
+                        // อัปเดต TextView
                         firstNameTextView.text = "ชื่อจริง: $firstName"
                         lastNameTextView.text = "นามสกุล: $lastName"
                         nicknameTextView.text = "ชื่อเล่น: $nickname"
-                        genderTextView.text = "เพศ: $gender"
+                        genderTextView.text = "เพศ: $displayGender"
 
                         // ✅ เติมการแสดงผลส่วนสูง/น้ำหนักแบบกัน NaN
                         heightTextView.text = "ส่วนสูง: " + if (height.isNaN()) "—" else "${height.toInt()} ซม."
                         weightTextView.text = "น้ำหนัก: " + if (weight.isNaN()) "—" else "${weight.toInt()} กก."
-
 
                         // Load profile image using Glide
                         Glide.with(this@OtherProfileActivity)

@@ -59,7 +59,7 @@
         android:layout_height="wrap_content"
         android:background="@color/blue_main"
         app:itemBackground="@drawable/nav_item_background"
-        app:itemIconSize="46dp"
+        app:itemIconSize="36dp"
         app:itemIconTint="@color/black"
         app:itemTextColor="@color/white"
         app:itemRippleColor="@color/white"

@@ -9,6 +9,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -96,9 +98,10 @@ class WholikeAdapter(
         Glide.with(context)
             .load(imageUrl)
             .placeholder(R.drawable.ic_user)
+            .format(DecodeFormat.PREFER_RGB_565)
+            .downsample(DownsampleStrategy.AT_MOST)
             .centerCrop()
             .into(holder.imageProfile)
-
 //        holder.itemView.setOnClickListener {
 //            onItemClick(user)  // เรียก callback ให้ Fragment จัดการ navigation
 //        }

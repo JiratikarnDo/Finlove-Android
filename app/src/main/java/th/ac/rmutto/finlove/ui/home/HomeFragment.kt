@@ -27,20 +27,14 @@ import java.text.SimpleDateFormat
 import java.util.*
 import android.Manifest
 import android.content.Context
-import android.content.IntentSender
 import android.location.Location
 import com.google.android.gms.location.*
 import androidx.activity.result.contract.ActivityResultContracts
-import com.google.android.gms.tasks.Task
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import androidx.activity.result.IntentSenderRequest
 import th.ac.rmutto.finlove.utils.AnimationHelper
-import okhttp3.Call
-import okhttp3.Callback
-import com.google.gson.Gson
-import okhttp3.Response
 import org.json.JSONObject
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import android.graphics.Color
@@ -48,6 +42,7 @@ import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.request.RequestOptions
 import androidx.navigation.fragment.findNavController
 import android.widget.ImageView
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import th.ac.rmutto.finlove.utils.AnimationHelper.animateImageSlideInFromRight
 
 
@@ -87,7 +82,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val locationPermissionRequest =
@@ -99,7 +93,6 @@ class HomeFragment : Fragment() {
                     .show()
             }
         }
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -115,6 +108,16 @@ class HomeFragment : Fragment() {
         userID = arguments?.getInt("userID", -1) ?: -1
         selectedUserID = arguments?.getInt("selectedUserID", -1) ?: -1
         Log.d("HomeFragment", "selectedUserID = $selectedUserID")
+
+        // ✅ ใส่ default ถ้ายังไม่เคยมี
+        val prefs = requireContext().getSharedPreferences("FinLovePrefs", Context.MODE_PRIVATE)
+        if (!prefs.contains("age_min") || !prefs.contains("age_max") || !prefs.contains("max_distance_km")) {
+            prefs.edit()
+                .putInt("age_min", 18)
+                .putInt("age_max", 60)
+                .putFloat("max_distance_km", 50f) // 50 กม.
+                .apply()
+        }
 
         checkAndRequestLocationPermission()
         recentlyDisliked.clear()
@@ -357,23 +360,40 @@ class HomeFragment : Fragment() {
         val imageView = userView.findViewById<ImageView>(R.id.imageProfile)
 
         animateImageSlideInFromRight(imageView) {
+            // ล้างงานเดิมกันภาพสลับช้า/ซ้อน (แนะนำ)
+            Glide.with(profileImage).clear(profileImage)
+            profileImage.animate().cancel()
+            profileImage.setImageDrawable(null)
+
             Glide.with(requireContext())
                 .load(user.profilePicture)
                 .apply(
                     RequestOptions()
                         .disallowHardwareConfig()
                         .format(DecodeFormat.PREFER_RGB_565)
-                        .timeout(60000) // ✅ รอเครือข่ายนานขึ้น ลดโอกาส fail ก่อน อีกตัวจะตามขึ้น
+                        .override(w, h)                          // ✅ โหลดมาพอดีกับ ImageView
+                        .downsample(DownsampleStrategy.AT_MOST)  // ✅ ลดละเอียดลงถ้าไฟล์ใหญ่เกิน
+                        .timeout(15000) // รอสูงสุด 15 วิ ถ้าเกินถือว่า fail
                 )
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .skipMemoryCache(false)
                 .dontAnimate()
-                .override((w * 0.75f).toInt(), (h * 0.75f).toInt())
                 .centerCrop()
                 .placeholder(R.drawable.ic_user)
                 .fallback(R.drawable.ic_user) // ✅ ถ้า URL เป็น null จะไม่ขึ้น error ก่อน
                 .error(R.drawable.error)
                 .into(profileImage)
+
+            // ✅ พรีโหลด nextUser ไว้ในแคช (ไม่มี into เพราะยังไม่แสดงผล)
+            // ✅ พรีโหลดรูปของ “คนถัดไป” โดยคำนวณ index จากลิสต์ (ไม่เรียก nextUser())
+            val nextIdx = if (index + 1 < users.size) index + 1 else 0
+            users.getOrNull(nextIdx)?.profilePicture?.let { nextUrl ->
+                Glide.with(requireContext())
+                    .load(nextUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                    .downsample(DownsampleStrategy.AT_MOST)
+                    .preload()
+            }
         }
 
 
@@ -515,17 +535,22 @@ class HomeFragment : Fragment() {
     }
 
     private fun filterByDistance(users: List<User>): List<User> {
-        val maxKm = getMaxDistanceKm()
+        val maxKm = getMaxDistanceKm()   // ✅ backend ส่ง km อยู่แล้ว
         val myLat_ = myLat
         val myLng_ = myLng
 
         return users.filter { u ->
-            u.distance?.let { km -> return@filter km >= 0.0 && km <= maxKm }
-            if (myLat_ != null && myLng_ != null && u.latitude != null && u.longitude != null) {
-                val km = calculateDistance(myLat_, myLng_, u.latitude!!, u.longitude!!) // คืนเป็น "กม."
+            u.distance?.let { km ->
+                // ✅ ใช้ตรง ๆ เพราะ backend ส่งเป็น km แล้ว
                 return@filter km >= 0.0 && km <= maxKm
             }
-            false
+            if (myLat_ != null && myLng_ != null && u.latitude != null && u.longitude != null) {
+                val meters = calculateDistance(myLat_, myLng_, u.latitude!!, u.longitude!!) // คืน "เมตร"
+                val km = meters / 1000.0   // ✅ แปลงเป็น km ก่อนเทียบ
+                return@filter km >= 0.0 && km <= maxKm
+            }
+            // ✅ soft-block: ถ้ายังไม่มีข้อมูลพอจะวัด → ปล่อยผ่าน
+            true
         }
     }
 

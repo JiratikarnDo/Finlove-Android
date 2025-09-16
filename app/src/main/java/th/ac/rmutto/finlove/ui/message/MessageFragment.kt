@@ -17,6 +17,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -276,6 +278,8 @@ class MatchedUserAdapter(
         // โหลดภาพด้วย Glide โดยมี placeholder และ error image
         Glide.with(holder.profileImage.context)
             .load(user.profilePicture)
+            .format(DecodeFormat.PREFER_RGB_565)
+            .downsample(DownsampleStrategy.AT_MOST)
             .placeholder(R.drawable.ic_user) // ภาพที่แสดงระหว่างโหลด
             .error(R.drawable.error) // ภาพที่แสดงถ้าโหลดไม่สำเร็จ
             .into(holder.profileImage)
