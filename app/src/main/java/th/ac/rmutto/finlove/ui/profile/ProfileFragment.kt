@@ -66,6 +66,8 @@ class ProfileFragment : Fragment() {
     private lateinit var labelHome: TextView
     private lateinit var labelInterest: TextView
     private lateinit var labelDate: TextView
+    private lateinit var labelCareer: TextView
+    private lateinit var spinnerProvince: Spinner
 
     private lateinit var user: User // ประกาศตัวแปร user ที่คลาส level
 
@@ -132,10 +134,12 @@ class ProfileFragment : Fragment() {
         labelHome = root.findViewById(R.id.labelHome)
         labelInterest = root.findViewById(R.id.labelInterest)
         labelDate = root.findViewById(R.id.labelDate)
+        labelCareer = root.findViewById(R.id.labelProvince)
         buttonSelectDateProfile = root.findViewById(R.id.buttonSelectDateProfile)
         imageViewProfile = root.findViewById(R.id.imageViewProfile)
         spinnerEducation = root.findViewById(R.id.spinnerEducation)
         spinnerGoal = root.findViewById(R.id.spinnerGoal)
+        spinnerProvince = root.findViewById(R.id.spinnerProvince)
         preferenceContainer = root.findViewById(R.id.preferenceContainer)
 
         buttonEditProfile = root.findViewById(R.id.buttonEditProfile)
@@ -195,7 +199,6 @@ class ProfileFragment : Fragment() {
         }
     }
 
-
     private fun setupSpinners() {
         val educationAdapter = ArrayAdapter.createFromResource(
             requireContext(),
@@ -222,7 +225,17 @@ class ProfileFragment : Fragment() {
         val interestGenderAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, interestGenderDisplay)
         interestGenderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerInterestGender.adapter = interestGenderAdapter
+
+        // Spinner จังหวัด
+        val provinceAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.province_display_array, // อ้างอิงจาก strings.xml
+            android.R.layout.simple_spinner_item
+        )
+        provinceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerProvince.adapter = provinceAdapter
     }
+
 
     private fun toggleEditMode() {
         isEditing = !isEditing
@@ -365,6 +378,12 @@ class ProfileFragment : Fragment() {
             spinnerGoal.setSelection(goalIndex)
         }
 
+        val provinceArray = resources.getStringArray(R.array.province_display_array)
+        val provinceIndex = provinceArray.indexOf(user.province)
+        if (provinceIndex >= 0) {
+            spinnerProvince.setSelection(provinceIndex)
+        }
+
         val interestGenderValueArray = resources.getStringArray(R.array.interest_gender_array)
         val interestGenderIndex = interestGenderValueArray.indexOf(user.interestGender)
         if (interestGenderIndex >= 0) {
@@ -397,6 +416,7 @@ class ProfileFragment : Fragment() {
                 val selectedInterestGender = interestGenderValueArray[spinnerInterestGender.selectedItemPosition]
                 val selectedEducation = spinnerEducation.selectedItem.toString()
                 val selectedGoal = spinnerGoal.selectedItem.toString()
+                val selectedProvince = spinnerProvince.selectedItem.toString()
 
                 val formattedDateBirth = selectedDateOfBirth ?: currentUser.dateBirth
 
@@ -414,6 +434,7 @@ class ProfileFragment : Fragment() {
                     .addFormDataPart("height", textViewHeight.text.toString())
                     .addFormDataPart("weight", textViewWeight.text.toString())
                     .addFormDataPart("home", textViewHome.text.toString())
+                    .addFormDataPart("province", selectedProvince)
 
                 formattedDateBirth?.let {
                     requestBuilder.addFormDataPart("DateBirth", it)
@@ -508,6 +529,7 @@ class ProfileFragment : Fragment() {
         spinnerInterestGender.isEnabled = enabled
         spinnerEducation.isEnabled = enabled
         spinnerGoal.isEnabled = enabled
+        spinnerProvince.isEnabled = enabled
         buttonSelectDateProfile.isEnabled = enabled
         buttonSaveProfile.isEnabled = enabled
         buttonDeleteAccount.isEnabled = enabled
@@ -522,6 +544,7 @@ class ProfileFragment : Fragment() {
         labelGoal.visibility = View.VISIBLE
         labelHeight.visibility = View.VISIBLE
         labelWeight.visibility = View.VISIBLE
+        labelCareer.visibility = View.VISIBLE
         labelHome.visibility = View.VISIBLE
         labelInterest.visibility = View.VISIBLE
         labelDate.visibility = View.VISIBLE
@@ -532,6 +555,7 @@ class ProfileFragment : Fragment() {
         buttonSelectDateProfile.visibility = View.VISIBLE
         spinnerGoal.visibility = View.VISIBLE
         spinnerEducation.visibility = View.VISIBLE
+        spinnerProvince.visibility = View.VISIBLE
     }
 
     private fun hideFieldsForViewingMode() {
@@ -546,6 +570,7 @@ class ProfileFragment : Fragment() {
         labelHome.visibility = View.GONE
         labelInterest.visibility = View.GONE
         labelDate.visibility = View.GONE
+        labelCareer.visibility = View.GONE
         textViewHeight.visibility = View.GONE
         textViewWeight.visibility = View.GONE
         textViewHome.visibility = View.GONE
@@ -553,6 +578,7 @@ class ProfileFragment : Fragment() {
         spinnerGoal.visibility = View.GONE
         spinnerEducation.visibility = View.GONE
         spinnerInterestGender.visibility = View.GONE
+        spinnerProvince.visibility = View.GONE
         buttonDeleteAccount.visibility = View.GONE
         buttonSaveProfile.visibility = View.GONE
         buttonEditPreferences.visibility = View.GONE
@@ -645,8 +671,8 @@ class ProfileFragment : Fragment() {
             verify = jsonObject.optInt("verify", 0) , // ✅ เพิ่มตรงนี้
             longitude = jsonObject.optDouble("longitude", 0.0),
             latitude = jsonObject.optDouble("latitude", 0.0),
-            distance = distance // Pass the parsed distance here
-
+            distance = distance, // Pass the parsed distance here
+            province = jsonObject.optString("province", "")
         )
     }
 }

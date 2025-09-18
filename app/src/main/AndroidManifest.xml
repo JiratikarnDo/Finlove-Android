@@ -110,7 +110,10 @@
             android:screenOrientation="portrait"
             android:exported="true" />
 
-        <activity android:name=".DatingPlaceActivity" />
+        <activity android:name=".DatingPlaceActivity"
+            android:theme="@style/Theme.Finlove.EdgeToEdge"
+            android:screenOrientation="portrait"
+            android:exported="true" />
 
         <activity
             android:name=".LoadingActivity"
