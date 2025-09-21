@@ -6,5 +6,6 @@ data class Place(
     val location: String,
     val latitude: Double,
     val longitude: Double,
-    val imageResId: Int
+    val imageResId: Int,
+    val gmapsUrl: String      // ✅ เพิ่มตรงนี้
 )

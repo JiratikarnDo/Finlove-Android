@@ -1,6 +1,12 @@
 package th.ac.rmutto.finlove
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -55,15 +61,31 @@ class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<Recycle
         }
     }
 
-    /** ถอดกรณีที่ถูก double-escaped เช่น \\uD83D\\uDE00 -> 😀 */
-    private fun decodeIfDoubleEscaped(s: String?): String {
-        if (s.isNullOrEmpty()) return ""
-        val maybe = s.replace("\\\\u", "\\u")           // แปลง \\u -> \u
+    // แก้ไข decodeIfDoubleEscaped เพื่อรับ Context เป็นพารามิเตอร์
+    private fun decodeIfDoubleEscaped(context: Context, s: String?): SpannableString {
+        if (s.isNullOrEmpty()) return SpannableString("")
+
+        val maybe = s.replace("\\\\u", "\\u") // แปลง \\u -> \u
         return try {
-            // ให้ JSON แปลง \uXXXX เป็นตัวจริง
-            JSONArray("[\"$maybe\"]").getString(0)
+            // ตรวจสอบว่า URL เป็น Google Maps หรือไม่
+            if (maybe.startsWith("https://www.google.com/maps")) {
+                val spanString = SpannableString("ดูแผนที่")
+                spanString.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        // เปิด Google Maps เมื่อคลิกที่ลิงก์
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(maybe))
+                        context.startActivity(intent)
+                    }
+                }, 0, spanString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                return spanString
+            }
+
+            // หากไม่ใช่ URL ให้แสดงข้อความปกติ
+            JSONArray("[\"$maybe\"]").getString(0).let {
+                SpannableString(it)
+            }
         } catch (_: Exception) {
-            s
+            SpannableString(s) // ถ้าเกิดข้อผิดพลาด ให้แสดงข้อความเดิม
         }
     }
 
@@ -74,13 +96,11 @@ class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<Recycle
         private val messageText: TextView = itemView.findViewById(R.id.message_text)
 
         fun bind(chatMessage: ChatMessage) {
-            val decoded = decodeIfDoubleEscaped(chatMessage.message)
-            messageText.text = chatMessage.message
-            messageText.text = EmojiCompat.get().process(decoded)
-            val url = chatMessage.profilePicture
-            Log.d("ChatAdapter", "Left avatar url for ${chatMessage.senderID} = $url")
+            val decoded = decodeIfDoubleEscaped(itemView.context, chatMessage.message) // ส่ง context
+            messageText.text = decoded
+            messageText.movementMethod = LinkMovementMethod.getInstance() // ทำให้ลิงก์คลิกได้
 
-            // กันเคส url ว่าง
+            val url = chatMessage.profilePicture
             if (url.isNullOrBlank()) {
                 profileImage.setImageResource(R.drawable.ic_user)
                 return
@@ -93,12 +113,9 @@ class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<Recycle
                 .circleCrop()
                 .into(profileImage)
 
-
-            // กดที่รูปเพื่อไปหน้าโปรไฟล์
             profileImage.setOnClickListener {
-                Log.d("ChatAdapter", "Clicked on profile image of user: ${chatMessage.senderID}")
                 val intent = Intent(itemView.context, OtherProfileActivity::class.java)
-                intent.putExtra("userID", chatMessage.senderID)  // ส่ง userID ของผู้ส่งไปที่ OtherProfileActivity
+                intent.putExtra("userID", chatMessage.senderID)
                 itemView.context.startActivity(intent)
             }
         }
@@ -108,9 +125,9 @@ class ChatAdapter(private val currentUserID: Int) : RecyclerView.Adapter<Recycle
         private val messageText: TextView = itemView.findViewById(R.id.message_text)
 
         fun bind(chatMessage: ChatMessage) {
-            val decoded = decodeIfDoubleEscaped(chatMessage.message)
-            messageText.text = chatMessage.message
-            messageText.text = EmojiCompat.get().process(decoded)
+            val decoded = decodeIfDoubleEscaped(itemView.context, chatMessage.message) // ส่ง context
+            messageText.text = decoded
+            messageText.movementMethod = LinkMovementMethod.getInstance() // ทำให้ลิงก์คลิกได้
         }
     }
 }

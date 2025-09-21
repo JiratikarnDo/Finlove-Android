@@ -5,7 +5,12 @@ import android.animation.PropertyValuesHolder
 import android.app.Dialog
 import android.content.Intent
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -55,7 +60,8 @@ data class Place(
     val description: String,
     val latitude: Double,
     val longitude: Double,
-    val photoUrl: String?
+    val photoUrl: String?,
+    val gmapsUrl: String   // ✅ ใช้ camelCase ให้ตรงกับ map ด้านล่าง
 )
 
 // ================== API Service ==================
@@ -136,7 +142,8 @@ class DatingPlaceFragment : Fragment() {
             val message = "ที่นี่น่าสนใจดีนะ คุณอยากลองเดทกับฉันไหม?\n\n" +
                     "📍 ${place.title}\n" +
                     "📝 ${place.description}\n" +
-                    "🌐 พิกัด: ${txtLocation.text}"
+                    "🌐 ${txtLocation.text}" +
+                    "🌐 ${place.gmapsUrl}"  // ส่ง URL เต็มไปในข้อความ
 
             val dialogView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_confirm_date, null)
@@ -149,6 +156,9 @@ class DatingPlaceFragment : Fragment() {
             val btnCancel = dialogView.findViewById<Button>(R.id.btnCancel)
 
             txtMessage.text = "คุณต้องการชวนอีกฝ่ายไปยังสถานที่นี้หรือไม่?\n\n📍 ${place.title}"
+
+            // ตั้งค่าคลิกได้ที่ "ดูแผนที่"
+            txtMessage.movementMethod = LinkMovementMethod.getInstance()  // ใช้เพื่อให้ข้อความที่เป็นลิงก์สามารถคลิกได้
 
             btnConfirm.setOnClickListener {
                 dialog.dismiss()
@@ -225,7 +235,8 @@ class DatingPlaceFragment : Fragment() {
                                 description = it.description ?: "ไม่มีคำอธิบาย",
                                 latitude = it.lat,
                                 longitude = it.lng,
-                                photoUrl = it.photo_url
+                                photoUrl = it.photo_url,
+                                gmapsUrl = it.gmaps_url   // ✅ ดึงมาด้วย
                             )
                         }
                         currentIndex = 0
@@ -248,7 +259,14 @@ class DatingPlaceFragment : Fragment() {
     private fun showPlace(index: Int) {
         val place = placeList[index]
         txtTitle.text = place.title
-        txtDescription.text = place.description
+
+        // ✅ ถ้า description ว่าง → แสดงข้อความ fix
+        val desc = if (place.description.isBlank() || place.description == "ไม่มีคำอธิบาย") {
+            "ℹ️ ยังไม่มีรายละเอียดเพิ่มเติมสำหรับสถานที่นี้\n✨ แต่ที่นี่อาจเป็นจุดที่น่าสนใจสำหรับการนัดเดท!"
+        } else {
+            "${decorateDescription(place.description)}\n${getExtraMessage(place.description)}"
+        }
+        txtDescription.text = desc
 
         Glide.with(this)
             .load(place.photoUrl)
@@ -258,7 +276,30 @@ class DatingPlaceFragment : Fragment() {
             .into(imagePlace)
 
         val distance = calculateDistance(userLat, userLng, place.latitude, place.longitude)
-        txtLocation.text = String.format("ห่างจากฉัน %.2f กม.", distance / 1000)
+        // ✅ ใช้ SpannableStringBuilder เพื่อกำหนด alignment แยกทีละบรรทัด
+        val text = "📍 พิกัดของสถานที่\nห่างจากคุณประมาณ %.1f กม.".format(distance / 1000)
+        val spannable = android.text.SpannableStringBuilder(text)
+
+        // หาตำแหน่งของบรรทัด "ห่างจากคุณ..."
+        val start = text.indexOf("ห่างจากคุณ")
+        val end = text.length
+
+        // ✅ จัดให้บรรทัดนี้อยู่ตรงกลาง
+        spannable.setSpan(
+            android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER),
+            start, end,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        txtLocation.text = spannable
+        // สร้างข้อความลิงก์
+        val linkText = getShortLink(place.gmapsUrl)
+
+        // ตั้งค่าให้ TextView รองรับการคลิกที่ลิงก์
+        txtLocation.append("  ") // เพิ่มช่องว่างระหว่างข้อความ
+        txtLocation.append(linkText)  // เพิ่มลิงก์ที่สามารถคลิกได้
+
+        txtLocation.movementMethod = LinkMovementMethod.getInstance()  // ตั้งค่าให้สามารถคลิกลิงก์ได้
     }
 
     private fun calculateDistance(userLat: Double, userLng: Double, placeLat: Double, placeLng: Double): Float {
@@ -288,5 +329,52 @@ class DatingPlaceFragment : Fragment() {
             }
         }
     }
+    private fun getShortLink(url: String): SpannableString {
+        // ถ้า URL เป็น Google Maps จะทำให้ "ดูแผนที่" เป็นลิงก์ที่คลิกได้
+        return if (url.startsWith("https://www.google.com/maps")) {
+            val spanString = SpannableString("ดูแผนที่")
+            spanString.setSpan(object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    // เปิด Google Maps
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    startActivity(intent)
+                }
+            }, 0, spanString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spanString
+        } else {
+            SpannableString(url)  // ถ้าไม่ใช่ Google Maps ก็ให้แสดง URL ปกติ
+        }
+    }
+    private fun decorateDescription(rawText: String): String {
+        val lower = rawText.lowercase()
 
+        val icon = when {
+            "coffee" in lower || "คาเฟ่" in lower || "cafe" in lower -> "☕ "
+            "ramen" in lower || "ราเมน" in lower -> "\uD83C\uDF5C " // 🍜
+            "park" in lower || "สวน" in lower -> "\uD83C\uDF33 " // 🌳
+            "restaurant" in lower || "ร้านอาหาร" in lower -> "\uD83C\uDF7D️ " // 🍽️
+            "bar" in lower || "ผับ" in lower -> "\uD83C\uDF7A " // 🍺
+            "museum" in lower || "พิพิธภัณฑ์" in lower -> "\uD83C\uDFF0 " // 🏰
+            else -> "ℹ️ "
+        }
+
+        return "$icon$rawText"
+    }
+    private fun getExtraMessage(description: String): String {
+        val lower = description.lowercase()
+        return when {
+            "คาเฟ่" in lower || "cafe" in lower || "coffee" in lower ->
+                " ใช้เวลาร่วมกับคู่ของคุณ ดื่มด่ำไปกับบรรยากาศดี ๆ และเครื่องดื่มที่คุณชอบ"
+            "ร้านอาหาร" in lower || "restaurant" in lower || "cuisine" in lower ->
+                " ลิ้มรสอาหารแสนอร่อยในบรรยากาศอบอุ่นกับคู่ของคุณ"
+            "สวน" in lower || "park" in lower ->
+                " เดินเล่นในบรรยากาศธรรมชาติ สูดอากาศบริสุทธิ์ไปพร้อมกัน"
+            "บาร์" in lower || "bar" in lower || "pub" in lower ->
+                " สนุกกับบรรยากาศยามค่ำคืน พร้อมเครื่องดื่มและเสียงเพลง"
+            "พิพิธภัณฑ์" in lower || "museum" in lower ->
+                " เดินชมและเรียนรู้สิ่งใหม่ ๆ ไปด้วยกัน"
+            else ->
+                " สถานที่นี้เหมาะสำหรับการใช้เวลาร่วมกัน"
+        }
+    }
 }

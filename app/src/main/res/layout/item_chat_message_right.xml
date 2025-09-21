@@ -8,6 +8,7 @@
     <!-- TextView สำหรับข้อความแชท -->
     <TextView
         android:id="@+id/message_text"
+        android:autoLink="web"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/chat_box_massage_right"

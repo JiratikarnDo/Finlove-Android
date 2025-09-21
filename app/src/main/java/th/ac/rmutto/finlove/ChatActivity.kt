@@ -1,9 +1,13 @@
 package th.ac.rmutto.finlove
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -295,6 +299,21 @@ class ChatActivity : AppCompatActivity() {
                     Toast.makeText(this@ChatActivity, "เกิดข้อผิดพลาด: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+
+    private fun getShortLink(url: String): SpannableString {
+        return if (url.startsWith("https://www.google.com/maps")) {
+            val spanString = SpannableString("ดูแผนที่")
+            spanString.setSpan(object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    startActivity(intent)
+                }
+            }, 0, spanString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spanString
+        } else {
+            SpannableString(url) // ถ้าไม่ใช่ Google Maps ก็ให้แสดง URL ปกติ
         }
     }
 

@@ -32,6 +32,7 @@
     <!-- TextView สำหรับข้อความแชท -->
     <TextView
         android:id="@+id/message_text"
+        android:autoLink="web"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
@@ -44,5 +45,7 @@
     app:layout_constrainedWidth="true"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintStart_toEndOf="@id/profile_image"
-    app:layout_constraintTop_toTopOf="parent" />
+    app:layout_constraintTop_toTopOf="parent"
+        android:clickable="true"
+        android:focusable="true" />
 </androidx.constraintlayout.widget.ConstraintLayout>
