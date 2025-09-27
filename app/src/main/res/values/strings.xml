@@ -20,7 +20,6 @@
         <item>ปริญญาตรี</item>
         <item>ปริญญาโท</item>
         <item>ปริญญาเอก</item>
-        <item>กำลังทำงาน</item>
     </string-array>
 
     <!-- Goal options -->
@@ -57,6 +56,23 @@
         <item>Male</item>
         <item>Female</item>
         <item>Other</item>
+    </string-array>
+
+    <string-array name="career_name_array">
+        <item>ไม่ระบุ</item>
+        <item>นักเรียน</item>
+        <item>นักศึกษา</item>
+        <item>พนักงาน</item>
+        <item>ข้าราชการ</item>
+    </string-array>
+
+    <!-- ต้องเรียงตรงกับ careerdetail.career_id: 0..4 -->
+    <string-array name="career_id_array">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 
     <string-array name="interest_gender_display_array">

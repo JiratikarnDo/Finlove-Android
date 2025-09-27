@@ -28,6 +28,13 @@ data class User(
 
     // ✅ เพิ่มฟิลด์พิกัดตำแหน่งของผู้ใช้
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+
+    // ====== เพิ่มฟิลด์อาชีพ ======
+    @SerializedName(value = "career_id", alternate = ["careerID"])
+    val career_id: Int = 0,                  // 0 = ไม่ระบุ (ตามสคีม่า)
+
+    @SerializedName(value = "career_name", alternate = ["careerName", "career"])
+    val career_name: String? = null
 )
 

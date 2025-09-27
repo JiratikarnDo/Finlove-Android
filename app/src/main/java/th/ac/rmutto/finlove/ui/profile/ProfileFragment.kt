@@ -37,6 +37,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.appcompat.widget.AppCompatButton
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 
 class ProfileFragment : Fragment() {
@@ -67,7 +70,11 @@ class ProfileFragment : Fragment() {
     private lateinit var labelInterest: TextView
     private lateinit var labelDate: TextView
     private lateinit var labelCareer: TextView
+    private lateinit var labelProvince: TextView
     private lateinit var spinnerProvince: Spinner
+    private lateinit var spinnerCareer: Spinner
+    private lateinit var careerNames: Array<String>
+    private lateinit var careerIds: Array<String>
 
     private lateinit var user: User // ประกาศตัวแปร user ที่คลาส level
 
@@ -134,12 +141,14 @@ class ProfileFragment : Fragment() {
         labelHome = root.findViewById(R.id.labelHome)
         labelInterest = root.findViewById(R.id.labelInterest)
         labelDate = root.findViewById(R.id.labelDate)
-        labelCareer = root.findViewById(R.id.labelProvince)
+        labelCareer = root.findViewById(R.id.labelCareer)
+        labelProvince = root.findViewById(R.id.labelProvince)
         buttonSelectDateProfile = root.findViewById(R.id.buttonSelectDateProfile)
         imageViewProfile = root.findViewById(R.id.imageViewProfile)
         spinnerEducation = root.findViewById(R.id.spinnerEducation)
         spinnerGoal = root.findViewById(R.id.spinnerGoal)
         spinnerProvince = root.findViewById(R.id.spinnerProvince)
+        spinnerCareer = root.findViewById(R.id.spinnerCareer)
         preferenceContainer = root.findViewById(R.id.preferenceContainer)
 
         buttonEditProfile = root.findViewById(R.id.buttonEditProfile)
@@ -234,8 +243,27 @@ class ProfileFragment : Fragment() {
         )
         provinceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerProvince.adapter = provinceAdapter
+
+        // ===== Career (อาชีพ) =====
+        careerNames = resources.getStringArray(R.array.career_name_array)
+        careerIds   = resources.getStringArray(R.array.career_id_array)
+
+        val careerAdapter = ArrayAdapter(
+            requireContext(), android.R.layout.simple_spinner_item, careerNames
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        spinnerCareer.adapter = careerAdapter
     }
 
+    private fun getSelectedCareerId(): Int {
+        val pos = spinnerCareer.selectedItemPosition
+        return careerIds.getOrElse(pos) { "0" }.toIntOrNull() ?: 0   // กันพลาด -> 0 = ไม่ระบุ
+    }
+
+    private fun setCareerFromApi(careerId: Int?) {
+        val target = careerId ?: 0
+        val idx = careerIds.indexOf(target.toString())
+        spinnerCareer.setSelection(if (idx >= 0) idx else 0)
+    }
 
     private fun toggleEditMode() {
         isEditing = !isEditing
@@ -254,6 +282,29 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun formatDateForDisplay(raw: String?): String {
+        if (raw.isNullOrBlank()) return "-"
+        val isoPatterns = arrayOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSX",
+            "yyyy-MM-dd'T'HH:mm:ssX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        )
+        for (p in isoPatterns) {
+            try {
+                val inFmt = SimpleDateFormat(p, Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+                val d = inFmt.parse(raw)
+                if (d != null) return SimpleDateFormat("dd/MM/yyyy", Locale.US).format(d)
+            } catch (_: Exception) {}
+        }
+        return try {
+            val d = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(raw)
+            SimpleDateFormat("dd/MM/yyyy", Locale.US).format(d!!)
+        } catch (_: Exception) {
+            raw.take(10)
+        }
+    }
 
     private fun selectImage() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -325,7 +376,9 @@ class ProfileFragment : Fragment() {
 
                     withContext(Dispatchers.Main) {
                         originalUser = user
+                        currentUser = user
                         updateUserFields(user)
+                        setCareerFromApi(user.career_id)
                         verifyBadge.visibility = if (user.verify == 1) View.VISIBLE else View.GONE
                         buttonVerify.visibility = if (user.verify == 1) View.GONE else View.VISIBLE
                     }
@@ -351,7 +404,7 @@ class ProfileFragment : Fragment() {
         textViewHeight.setText(user.height.toString())
         textViewWeight.setText(user.weight.toString())
         textViewHome.setText(user.home)
-        buttonSelectDateProfile.text = user.dateBirth
+        buttonSelectDateProfile.text = formatDateForDisplay(user.dateBirth)
 
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.toolbarProfile)
         val toolbarTitle = toolbar.findViewById<TextView>(R.id.toolbarTitle)
@@ -436,6 +489,9 @@ class ProfileFragment : Fragment() {
                     .addFormDataPart("home", textViewHome.text.toString())
                     .addFormDataPart("province", selectedProvince)
 
+                // ⬅️ ใส่ career_id ตรงนี้ (อยู่ในสcopeเดียวกับ requestBuilder)
+                requestBuilder.addFormDataPart("career_id", getSelectedCareerId().toString())
+
                 formattedDateBirth?.let {
                     requestBuilder.addFormDataPart("DateBirth", it)
                 }
@@ -496,8 +552,8 @@ class ProfileFragment : Fragment() {
         val datePickerDialog = DatePickerDialog(
             requireContext(),
             { _, selectedYear, selectedMonth, selectedDay ->
-                selectedDateOfBirth = "$selectedYear-${String.format("%02d", selectedMonth + 1)}-${String.format("%02d", selectedDay)}"
-                buttonSelectDateProfile.text = selectedDateOfBirth
+                selectedDateOfBirth = "%04d-%02d-%02d".format(selectedYear, selectedMonth + 1, selectedDay) // เก็บส่งเซิร์ฟเวอร์ (yyyy-MM-dd)
+                buttonSelectDateProfile.text = formatDateForDisplay(selectedDateOfBirth)
             },
             year,
             month,
@@ -530,6 +586,7 @@ class ProfileFragment : Fragment() {
         spinnerEducation.isEnabled = enabled
         spinnerGoal.isEnabled = enabled
         spinnerProvince.isEnabled = enabled
+        spinnerCareer.isEnabled = enabled
         buttonSelectDateProfile.isEnabled = enabled
         buttonSaveProfile.isEnabled = enabled
         buttonDeleteAccount.isEnabled = enabled
@@ -547,6 +604,7 @@ class ProfileFragment : Fragment() {
         labelCareer.visibility = View.VISIBLE
         labelHome.visibility = View.VISIBLE
         labelInterest.visibility = View.VISIBLE
+        labelProvince.visibility = View.VISIBLE
         labelDate.visibility = View.VISIBLE
         textViewEmail.visibility = View.VISIBLE
         textViewHeight.visibility = View.VISIBLE
@@ -556,6 +614,7 @@ class ProfileFragment : Fragment() {
         spinnerGoal.visibility = View.VISIBLE
         spinnerEducation.visibility = View.VISIBLE
         spinnerProvince.visibility = View.VISIBLE
+        spinnerCareer.visibility = View.VISIBLE
     }
 
     private fun hideFieldsForViewingMode() {
@@ -571,6 +630,7 @@ class ProfileFragment : Fragment() {
         labelInterest.visibility = View.GONE
         labelDate.visibility = View.GONE
         labelCareer.visibility = View.GONE
+        labelProvince.visibility = View.GONE
         textViewHeight.visibility = View.GONE
         textViewWeight.visibility = View.GONE
         textViewHome.visibility = View.GONE
@@ -579,6 +639,7 @@ class ProfileFragment : Fragment() {
         spinnerEducation.visibility = View.GONE
         spinnerInterestGender.visibility = View.GONE
         spinnerProvince.visibility = View.GONE
+        spinnerCareer.visibility = View.GONE
         buttonDeleteAccount.visibility = View.GONE
         buttonSaveProfile.visibility = View.GONE
         buttonEditPreferences.visibility = View.GONE
@@ -648,6 +709,15 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun optIntAny(json: JSONObject, vararg keys: String, default: Int = 0): Int {
+        for (k in keys) if (json.has(k) && !json.isNull(k)) return json.optInt(k, default)
+        return default
+    }
+    private fun optStringAny(json: JSONObject, vararg keys: String, default: String? = null): String? {
+        for (k in keys) if (json.has(k) && !json.isNull(k)) return json.optString(k, default)
+        return default
+    }
+
     private fun parseUserInfo(responseBody: String?): User {
         val jsonObject = JSONObject(responseBody ?: "{}")
         val distance = jsonObject.optDouble("distance", 0.0)
@@ -672,7 +742,11 @@ class ProfileFragment : Fragment() {
             longitude = jsonObject.optDouble("longitude", 0.0),
             latitude = jsonObject.optDouble("latitude", 0.0),
             distance = distance, // Pass the parsed distance here
-            province = jsonObject.optString("province", "")
+            province = jsonObject.optString("province", ""),
+            // 🔧 รองรับทั้ง snake_case/camelCase: career_id / careerID / careerId
+            career_id = optIntAny(jsonObject, "career_id", "careerID", "careerId", default = 0),
+            // 🔧 รองรับทั้ง snake_case/camelCase: career_name / careerName / career
+            career_name = optStringAny(jsonObject, "career_name", "careerName", "career", default = null)
         )
     }
 }

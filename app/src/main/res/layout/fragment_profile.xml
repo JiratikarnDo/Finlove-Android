@@ -409,6 +409,31 @@
             app:layout_constraintStart_toStartOf="@id/spinnerGender"
             app:layout_constraintTop_toBottomOf="@id/buttonEditPreferences" />
 
+        <TextView
+            android:id="@+id/labelCareer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="12dp"
+            android:text="อาชีพ:"
+            android:textColor="#000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/spinnerCareer"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/labelNickName"
+            app:layout_constraintBaseline_toBaselineOf="@id/spinnerCareer"
+            app:layout_constraintTop_toBottomOf="@+id/labelEducation" />
+
+        <Spinner
+            android:id="@+id/spinnerCareer"
+            android:layout_width="220dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/spinnerEducation"
+            app:layout_constraintTop_toBottomOf="@id/spinnerEducation" />
+
         <!-- Career Spinner -->
 
         <TextView
@@ -422,9 +447,9 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@+id/spinnerProvince"
             app:layout_constraintHorizontal_bias="0.333"
-            app:layout_constraintStart_toStartOf="@+id/labelEducation"
+            app:layout_constraintStart_toStartOf="@+id/labelCareer"
             app:layout_constraintBaseline_toBaselineOf="@id/spinnerProvince"
-            app:layout_constraintTop_toBottomOf="@+id/labelEducation" />
+            app:layout_constraintTop_toBottomOf="@+id/labelCareer" />
 
         <Spinner
             android:id="@+id/spinnerProvince"
@@ -434,7 +459,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@id/spinnerGender"
-            app:layout_constraintTop_toBottomOf="@id/spinnerEducation" />
+            app:layout_constraintTop_toBottomOf="@id/spinnerCareer" />
 
         <TextView
             android:id="@+id/labelGoal"
