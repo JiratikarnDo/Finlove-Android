@@ -243,7 +243,7 @@ class DatingPlaceFragment : Fragment() {
                         showPlace(currentIndex)
                     }
                 } else {
-                    Toast.makeText(requireContext(), "โหลดข้อมูลไม่สำเร็จ", Toast.LENGTH_SHORT).show()
+                    handleHttpError(response.code(), matchId)   // ⬅️ เพิ่มบรรทัดนี้
                 }
             }
 
@@ -300,6 +300,29 @@ class DatingPlaceFragment : Fragment() {
         txtLocation.append(linkText)  // เพิ่มลิงก์ที่สามารถคลิกได้
 
         txtLocation.movementMethod = LinkMovementMethod.getInstance()  // ตั้งค่าให้สามารถคลิกลิงก์ได้
+    }
+
+    private fun showRetryDialog(message: String, onRetry: () -> Unit) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("โอ๊ะ! มีปัญหา")
+            .setMessage(message)
+            .setPositiveButton("ลองใหม่") { _, _ -> onRetry() }
+            .setNegativeButton("ปิด", null)
+            .show()
+    }
+
+    private fun handleHttpError(code: Int, matchId: Int) {
+        when (code) {
+            404 -> showRetryDialog(
+                "ยังไม่มีพิกัดของคู่เดททั้งสองฝั่งหรือไม่ครบ\nกรุณาให้ทั้งสองคนเปิดแชร์ตำแหน่ง แล้วลองใหม่"
+            ) { loadPlacesFromApi(matchId) }
+
+            502, 503, 504 -> showRetryDialog(
+                "แหล่งข้อมูลภายนอกช้า/ล่มชั่วคราว (HTTP $code)\nลองใหม่อีกครั้งได้เลย"
+            ) { loadPlacesFromApi(matchId) }
+
+            else -> Toast.makeText(requireContext(), "โหลดข้อมูลไม่สำเร็จ ($code)", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun calculateDistance(userLat: Double, userLng: Double, placeLat: Double, placeLng: Double): Float {

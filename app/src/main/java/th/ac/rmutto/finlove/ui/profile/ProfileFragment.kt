@@ -53,6 +53,7 @@ class ProfileFragment : Fragment() {
     private lateinit var textViewHeight: EditText
     private lateinit var textViewWeight: EditText
     private lateinit var textViewHome: EditText
+    private lateinit var textViewBio: EditText
     private lateinit var buttonSelectDateProfile: Button
     private lateinit var imageViewProfile: ImageView
     private lateinit var spinnerInterestGender: Spinner
@@ -132,6 +133,7 @@ class ProfileFragment : Fragment() {
         textViewHeight = root.findViewById(R.id.textViewHeight)
         textViewWeight = root.findViewById(R.id.textViewWeight)
         textViewHome = root.findViewById(R.id.textViewHome)
+        textViewBio = root.findViewById(R.id.edtBio)
         labelUsername = root.findViewById(R.id.labelUsername)
         labelEmail = root.findViewById(R.id.labelEmail)
         labelEducation = root.findViewById(R.id.labelEducation)
@@ -158,6 +160,8 @@ class ProfileFragment : Fragment() {
         buttonEditPreferences = root.findViewById(R.id.buttonEditPreferences)
         buttonVerify = root.findViewById(R.id.buttonVerify)
         verifyBadge = root.findViewById(R.id.verifyBadge)
+
+        textViewBio.isEnabled = false
 
         // Initialize Toolbar Views
         val toolbar = root.findViewById<Toolbar>(R.id.toolbarProfile)
@@ -276,9 +280,15 @@ class ProfileFragment : Fragment() {
 
             currentUser = originalUser.copy()
             showAllFields() // แสดงฟิลด์ทั้งหมดเมื่อเข้าสู่โหมดแก้ไข
+
+            // Enable textViewBio when editing mode is turned on
+            textViewBio.isEnabled = true
         } else {
             restoreOriginalUserInfo()
             hideFieldsForViewingMode() // ซ่อนฟิลด์ที่ไม่จำเป็นเมื่อออกจากโหมดแก้ไข
+
+            // Disable textViewBio when editing mode is turned off
+            textViewBio.isEnabled = false
         }
     }
 

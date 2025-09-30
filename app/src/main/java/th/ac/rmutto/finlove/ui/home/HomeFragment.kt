@@ -86,11 +86,12 @@ class HomeFragment : Fragment() {
 
     private val locationPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            val fine = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            val coarse = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            if (fine || coarse) {      // ✅ ยอมรับอย่างใดอย่างหนึ่ง
                 turnOnGPS()
             } else {
-                Toast.makeText(requireContext(), "กรุณาอนุญาตการเข้าถึงตำแหน่ง", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(requireContext(), "กรุณาอนุญาตการเข้าถึงตำแหน่ง", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -249,10 +250,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun hasLocationPermission(): Boolean {
-        return ActivityCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION
+        val fine = ActivityCompat.checkSelfPermission(
+            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
+        val coarse = ActivityCompat.checkSelfPermission(
+            requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        return fine || coarse
     }
 
     private fun sendLocationToServer(latitude: Double, longitude: Double) {
@@ -313,7 +317,31 @@ class HomeFragment : Fragment() {
                     Log.d("GPS", "📍 พิกัด Latitude: $lat, Longitude: $lng")
                     sendLocationToServer(lat, lng) // <-- เพิ่มตรงนี้ เพื่อส่งพิกัดไปเซิร์ฟเวอร์
                 } else {
-                    Toast.makeText(requireContext(), "ไม่สามารถดึงพิกัดได้", Toast.LENGTH_SHORT).show()
+                    // 🔥 ขอพิกัดสดแบบ one-shot แทน
+                    val hasFine = ActivityCompat.checkSelfPermission(
+                        requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    val priority = if (hasFine)
+                        com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
+                    else
+                        com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY
+
+                    val cts = com.google.android.gms.tasks.CancellationTokenSource()
+                    fusedLocationClient.getCurrentLocation(priority, cts.token)
+                        .addOnSuccessListener { loc ->
+                            if (loc != null) {
+                                myLat = loc.latitude
+                                myLng = loc.longitude
+                                Log.d("GPS", "📍 currentLocation: ${loc.latitude}, ${loc.longitude}")
+                                sendLocationToServer(loc.latitude, loc.longitude)
+                            } else {
+                                Toast.makeText(requireContext(), "ไม่สามารถดึงพิกัดได้", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(requireContext(), "เกิดข้อผิดพลาดในการดึงตำแหน่ง", Toast.LENGTH_SHORT).show()
+                        }
                 }
             }
             .addOnFailureListener {
@@ -899,8 +927,18 @@ class HomeFragment : Fragment() {
                     val recommendedUsers = parseUsers(safeBody)
                     // ✨ กรองด้วยช่วงอายุที่ผู้ใช้ตั้งไว้
                     val visibleByAge = filterByAge(recommendedUsers)
+
+                    // ✅ ใหม่: ตัดคนที่ "ไม่ทราบระยะทาง" ออก
+                    // เงื่อนไขยอมรับ 2 แบบ:
+                    // 1) backend ใส่ distance มาแล้ว (เป็นกม.)
+                    // 2) ไม่มี distance แต่เรามีพิกัดเรา + พิกัดเขา → คำนวณเองได้
+                    val knownDistanceOnly = visibleByAge.filter { u ->
+                        (u.distance != null) ||
+                                (myLat != null && myLng != null && u.latitude != null && u.longitude != null)
+                    }
                     // 2) กรองด้วยระยะทาง (ดึง max_distance_km จาก SharedPreferences)
-                    val visible = filterByDistance(visibleByAge)
+                    val visible = filterByDistance(knownDistanceOnly)
+
                     withContext(Dispatchers.Main) {
                         if (visible.isEmpty()) {
                             NoUsersDialog()   // ← เด้ง popup + ไปหน้า Settings

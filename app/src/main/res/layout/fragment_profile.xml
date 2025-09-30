@@ -102,20 +102,23 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
             <!-- Image View Profile -->
+
+            <!-- ชื่อผู้ใช้ -->
+
             <ImageView
                 android:id="@+id/imageViewProfile"
-                android:layout_width="180dp"
+                android:layout_width="200dp"
                 android:layout_height="180dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="4dp"
                 android:layout_marginBottom="16dp"
-                android:scaleType="fitCenter"
-                app:layout_constraintDimensionRatio="1:1"
                 android:contentDescription="Profile Image"
                 android:src="@drawable/img_1"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
 
             <!-- Verify Badge -->
             <ImageView
@@ -156,14 +159,28 @@
             android:id="@+id/buttonEditProfile"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_marginStart="45dp"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="52dp"
             android:background="@null"
             android:contentDescription="Edit Profile"
             android:padding="12dp"
             android:src="@drawable/ic_edit"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/buttonreccomend"
             app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
+
+        <EditText
+            android:id="@+id/edtBio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:background="@drawable/button_normal"
+            android:hint="กรอกข้อมูลเกี่ยวกับตัวเอง"
+            android:padding="6dp"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="@+id/textViewFirstName"
+            app:layout_constraintStart_toStartOf="@id/constraintLayout"
+            app:layout_constraintTop_toBottomOf="@id/buttonEditProfile" />
 
         <TextView
             android:id="@+id/labelUsername"
@@ -192,11 +209,12 @@
             android:enabled="true"
             android:hint="Username: "
             android:padding="12dp"
+            android:background="@drawable/button_normal"
             android:textColor="#000000"
-            android:textSize="16sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.69"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/textViewFirstName"
             app:layout_constraintTop_toBottomOf="@+id/textViewNickname" />
 
         <TextView
@@ -222,12 +240,13 @@
             android:id="@+id/textViewEmail"
             android:layout_width="220dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="12dp"
             android:enabled="true"
             android:hint="Email: "
             android:padding="12dp"
+            android:background="@drawable/button_normal"
             android:textColor="#000000"
-            android:textSize="16sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@id/textViewUsername"
@@ -237,29 +256,30 @@
             android:id="@+id/labelFirstName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="20dp"
             android:text="ชื่อจริง:"
             android:textColor="#000"
             android:textSize="16sp"
+            app:layout_constraintBaseline_toBaselineOf="@id/textViewFirstName"
             app:layout_constraintEnd_toStartOf="@+id/textViewFirstName"
-            app:layout_constraintTop_toBottomOf="@+id/buttonEditProfile" />
+            app:layout_constraintTop_toBottomOf="@id/edtBio" />
 
         <EditText
             android:id="@+id/textViewFirstName"
             android:layout_width="220dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="88dp"
-            android:background="@android:color/transparent"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/button_normal"
             android:enabled="true"
             android:hint="Firstname: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="16sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.675"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/constraintLayout" />
+            app:layout_constraintTop_toBottomOf="@id/edtBio" />
 
         <!-- Nickname -->
 
@@ -286,8 +306,8 @@
             android:hint="Lastname: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="16sp"
-            android:background="@android:color/transparent"
+            android:textSize="14sp"
+            android:background="@drawable/button_normal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@id/textViewFirstName"
@@ -316,15 +336,15 @@
             android:layout_width="220dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:background="@android:color/transparent"
+            android:background="@drawable/button_normal"
             android:enabled="true"
             android:hint="Nickname: "
             android:padding="12dp"
             android:textColor="#000000"
-            android:textSize="16sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.675"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/textViewFirstName"
             app:layout_constraintTop_toBottomOf="@id/textViewLastName" />
 
         <TextView
@@ -347,6 +367,7 @@
             android:layout_width="220dp"
             android:layout_height="50dp"
             android:layout_marginTop="16dp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.675"
             app:layout_constraintStart_toStartOf="parent"
@@ -356,7 +377,7 @@
             android:id="@+id/preferenceContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:orientation="horizontal"
             app:layout_constraintTop_toBottomOf="@id/spinnerGender"
             app:layout_constraintStart_toStartOf="parent"
@@ -370,17 +391,17 @@
         <!-- ปุ่มแก้ไขความชอบ -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/buttonEditPreferences"
-            android:layout_width="300dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:text="แก้ไขความชอบของคุณ"
             android:visibility="gone"
             android:textColor="@android:color/black"
             android:textStyle="bold"
             android:background="@drawable/button_normal"
             app:layout_constraintTop_toBottomOf="@id/preferenceContainer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintStart_toStartOf="@id/buttonSaveProfile"
+            app:layout_constraintEnd_toEndOf="@id/buttonSaveProfile" />
 
         <!-- Education Spinner -->
 
@@ -524,7 +545,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:focusable="false"
+            android:background="@drawable/button_normal"
             android:focusableInTouchMode="false"
+            android:textSize="14sp"
             android:hint="Weight"
             android:padding="12dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -539,8 +562,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:focusable="false"
+            android:background="@drawable/button_normal"
             android:focusableInTouchMode="false"
             android:hint="Height"
+            android:textSize="14sp"
             android:padding="12dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.675"
@@ -570,8 +595,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:focusable="false"
+            android:background="@drawable/button_normal"
             android:focusableInTouchMode="false"
             android:hint="Home"
+            android:textSize="14sp"
             android:padding="12dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.684"
@@ -612,7 +639,7 @@
             android:layout_marginEnd="12dp"
             android:text="วัน/เดือน/ปี:"
             android:textColor="#000"
-            android:textSize="16sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toStartOf="@+id/buttonSelectDateProfile"
             app:layout_constraintHorizontal_bias="0.333"
             app:layout_constraintStart_toStartOf="@+id/labelNickName"
@@ -634,29 +661,29 @@
         <!-- Save Button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/buttonSaveProfile"
-            android:layout_width="250dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/button"
+            android:layout_marginTop="27dp"
+            android:background="@drawable/button_pressed"
             android:textStyle="bold"
             android:textColor="@color/white"
             android:text="บันทึกข้อมูล"
             app:layout_constraintTop_toBottomOf="@id/buttonSelectDateProfile"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintStart_toStartOf="@id/constraintLayout"
+            app:layout_constraintEnd_toEndOf="@id/constraintLayout" />
 
         <!-- Delete Account Button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/buttonDeleteAccount"
-            android:layout_width="250dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:background="@drawable/button"
+            android:layout_marginTop="27dp"
+            android:background="@drawable/button_pressed"
             android:text="ลบบัญชี"
             android:textColor="@color/white"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/constraintLayout"
+            app:layout_constraintStart_toStartOf="@id/constraintLayout"
             app:layout_constraintTop_toBottomOf="@id/buttonSaveProfile" />
 
         <androidx.appcompat.widget.AppCompatButton
