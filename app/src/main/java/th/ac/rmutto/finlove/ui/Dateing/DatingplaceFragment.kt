@@ -30,6 +30,8 @@ import th.ac.rmutto.finlove.ChatActivity
 import th.ac.rmutto.finlove.R
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import androidx.appcompat.app.AlertDialog
+
 
 // ================== Data Classes ==================
 data class RecommendResponse(
@@ -239,11 +241,22 @@ class DatingPlaceFragment : Fragment() {
                                 gmapsUrl = it.gmaps_url   // ✅ ดึงมาด้วย
                             )
                         }
-                        currentIndex = 0
-                        showPlace(currentIndex)
+                        if (placeList.isEmpty()) {
+                            AlertDialog.Builder(requireContext())
+                                .setTitle("ไม่พบสถานที่แนะนำ")
+                                .setMessage("ระบบไม่สามารถหาสถานที่ที่เหมาะสมได้ในตอนนี้\nกรุณาลองใหม่ภายหลัง")
+                                .setCancelable(false)
+                                .setPositiveButton("กลับไปแชท") { _, _ ->
+                                    requireActivity().onBackPressed()
+                                }
+                                .show()
+                        } else {
+                            currentIndex = 0
+                            showPlace(currentIndex)
+                        }
                     }
                 } else {
-                    handleHttpError(response.code(), matchId)   // ⬅️ เพิ่มบรรทัดนี้
+                    handleHttpError(response.code(), matchId)
                 }
             }
 
@@ -257,6 +270,16 @@ class DatingPlaceFragment : Fragment() {
     }
 
     private fun showPlace(index: Int) {
+
+        // ✅ ป้องกัน crash ถ้า list ว่างหรือ index ไม่ถูกต้อง
+        if (placeList.isEmpty() || index !in placeList.indices) {
+            txtTitle.text = "❌ ไม่มีสถานที่แนะนำ"
+            txtDescription.text = "โปรดลองใหม่อีกครั้ง หรือขยายรัศมีค้นหา"
+            imagePlace.setImageResource(R.drawable.ic_edit) // placeholder
+            txtLocation.text = "ไม่มีพิกัดให้แสดง"
+            return
+        }
+
         val place = placeList[index]
         txtTitle.text = place.title
 

@@ -43,6 +43,7 @@ import com.bumptech.glide.request.RequestOptions
 import androidx.navigation.fragment.findNavController
 import android.widget.ImageView
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
+import th.ac.rmutto.finlove.BioBottomSheetFragment
 import th.ac.rmutto.finlove.utils.AnimationHelper.animateImageSlideInFromRight
 
 
@@ -430,6 +431,22 @@ class HomeFragment : Fragment() {
             verifiedIcon.visibility = View.VISIBLE
         } else {
             verifiedIcon.visibility = View.GONE
+        }
+
+        val buttonBio: ImageButton = userView.findViewById(R.id.buttonBio)
+
+// เมื่อกดปุ่ม "ดูข้อมูลเพิ่มเติม"
+        buttonBio.setOnClickListener {
+            val bioBottomSheet = BioBottomSheetFragment.newInstance(
+                userID = user.userID,
+                nickname = user.nickname,
+                profilePicture = user.profilePicture,
+                dateBirth = user.dateBirth,
+                verify = user.verify,
+                preferences = user.preferences,
+                bio = user.bio
+            )
+            bioBottomSheet.show(childFragmentManager, "BioBottomSheet")
         }
 
         val blockIds = listOf(R.id.block1, R.id.block2, /* ... */ R.id.block3)
@@ -1094,6 +1111,7 @@ data class User(
     val longitude: Double? = null,        // เพิ่มตรงนี้
     val distance: Double? = null,
     val allPreferences: List<String> = emptyList(),
-    val sharedPreferences: List<String> = emptyList()
+    val sharedPreferences: List<String> = emptyList(),
+    val bio: String? = null, // เพิ่มฟิลด์ Bio
 )
 

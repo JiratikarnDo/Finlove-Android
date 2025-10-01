@@ -25,6 +25,7 @@ data class User(
     val preferences: List<String> = emptyList(),
     val distance: Double? = null,   // 👈 ระยะทาง (เมตร) เป็น nullable
     val verify: Int,
+    val bio: String? = null, // เพิ่มฟิลด์ Bio
 
     // ✅ เพิ่มฟิลด์พิกัดตำแหน่งของผู้ใช้
     val latitude: Double,
