@@ -437,16 +437,45 @@ class HomeFragment : Fragment() {
 
 // เมื่อกดปุ่ม "ดูข้อมูลเพิ่มเติม"
         buttonBio.setOnClickListener {
-            val bioBottomSheet = BioBottomSheetFragment.newInstance(
-                userID = user.userID,
-                nickname = user.nickname,
-                profilePicture = user.profilePicture,
-                dateBirth = user.dateBirth,
-                verify = user.verify,
-                preferences = user.preferences,
-                bio = user.bio
-            )
-            bioBottomSheet.show(childFragmentManager, "BioBottomSheet")
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    // ✅ ใช้เส้นทาง /api_v2/user/:id
+                    val url = getString(R.string.root_url) + "/api_v2/user/${user.userID}"
+
+                    val request = Request.Builder()
+                        .url(url)
+                        .get() // <-- ใช้ GET
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    val responseBody = response.body?.string()
+                    val json = JSONObject(responseBody ?: "{}")
+
+                    // ✅ ดึง bio
+                    val bio = json.optString("bio", "ไม่มีข้อมูล Bio")
+
+                    withContext(Dispatchers.Main) {
+                        val bioBottomSheet = BioBottomSheetFragment.newInstance(
+                            userID = user.userID,
+                            nickname = user.nickname,
+                            profilePicture = user.profilePicture,
+                            dateBirth = user.dateBirth,
+                            verify = user.verify,
+                            preferences = user.preferences,
+                            bio = bio
+                        )
+                        bioBottomSheet.show(childFragmentManager, "BioBottomSheet")
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "โหลดข้อมูลไม่สำเร็จ: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
         }
 
         val blockIds = listOf(R.id.block1, R.id.block2, /* ... */ R.id.block3)
@@ -902,7 +931,8 @@ class HomeFragment : Fragment() {
                         optDoubleOrNull(jsonObject, "longitude"),
                         allPreferences = allPrefs,
                         sharedPreferences = sharedPrefs,
-                        distance = optDoubleOrNull(jsonObject, "distance")   // ✅ ใช้ helper
+                        distance = optDoubleOrNull(jsonObject, "distance"),   // ✅ ใช้ helper
+                        bio = jsonObject.optString("bio", null)   // 👈 เพิ่มตรงนี้
                     )
 
                     withContext(Dispatchers.Main) { callback(user) }
@@ -1057,6 +1087,7 @@ class HomeFragment : Fragment() {
 
                 Log.d("parseUsers", "User $i imageFile: $imageFile")  // เพิ่มบรรทัดนี้
                 Log.d("parseUsers", "User $i distance(raw)=${jsonObject.opt("distance")}")
+                Log.d("parseUsers", "User $i bio=${jsonObject.optString("bio")}")
 
                 val user = User(
                     jsonObject.getInt("UserID"),
@@ -1069,7 +1100,8 @@ class HomeFragment : Fragment() {
                     optDoubleOrNull(jsonObject, "longitude"),    // ✅,
                     allPreferences = allPrefs,           // << ใส่ค่าเพิ่ม
                     sharedPreferences = sharedPrefs,      // << ใส่ค่าเพิ่ม
-                    distance = optDoubleOrNull(jsonObject, "distance")   // ✅ ใช้ helper
+                    distance = optDoubleOrNull(jsonObject, "distance"),   // ✅ ใช้ helper
+                    bio = jsonObject.optString("bio", null)
                 )
                 users.add(user)
             }

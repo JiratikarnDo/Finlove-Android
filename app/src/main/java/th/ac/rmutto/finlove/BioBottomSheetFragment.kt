@@ -31,8 +31,10 @@ class BioBottomSheetFragment : BottomSheetDialogFragment() {
         val nickname = arguments?.getString("nickname") ?: "ไม่ระบุชื่อ"
         val dateBirth = arguments?.getString("dateBirth") ?: ""
         val verify = arguments?.getInt("verify") ?: 0
-        val bioText = arguments?.getString("bio") ?: "ไม่มีข้อมูล Bio"
         val imageUrl = arguments?.getString("profilePicture")
+        val bioText = arguments?.getString("bio")
+            ?.takeIf { !it.isNullOrBlank() && !it.equals("null", ignoreCase = true) }
+            ?: "ไม่ระบุ"
 
         // ✅ คำนวณอายุ
         val age = if (dateBirth.isNotEmpty()) {
@@ -69,7 +71,12 @@ class BioBottomSheetFragment : BottomSheetDialogFragment() {
         // ✅ ใส่ค่า UI
         binding.textNickname.text = nickname
         binding.textAgeVerify.text = ageText
-        binding.textBio.text = bioText
+        // 👇 ตรงนี้แหละ เพิ่ม fallback
+        binding.textBio.text = if (bioText.isBlank()) {
+            "ไม่ระบุ"
+        } else {
+            bioText
+        }
 
         // ✅ โหลดรูป
         if (!imageUrl.isNullOrBlank()) {

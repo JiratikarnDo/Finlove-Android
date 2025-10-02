@@ -382,6 +382,8 @@ class ProfileFragment : Fragment() {
 
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
+                    // 👇 ใส่ตรงนี้เลย
+                    Log.d("API_RESPONSE", responseBody ?: "null")
                     user = parseUserInfo(responseBody) // กำหนดค่าให้ user ที่นี่
 
                     withContext(Dispatchers.Main) {
@@ -414,6 +416,7 @@ class ProfileFragment : Fragment() {
         textViewHeight.setText(user.height.toString())
         textViewWeight.setText(user.weight.toString())
         textViewHome.setText(user.home)
+        textViewBio.setText(user.bio ?: "")
         buttonSelectDateProfile.text = formatDateForDisplay(user.dateBirth)
 
         val toolbar = requireActivity().findViewById<Toolbar>(R.id.toolbarProfile)
@@ -498,6 +501,7 @@ class ProfileFragment : Fragment() {
                     .addFormDataPart("weight", textViewWeight.text.toString())
                     .addFormDataPart("home", textViewHome.text.toString())
                     .addFormDataPart("province", selectedProvince)
+                    .addFormDataPart("bio", textViewBio.text.toString())
 
                 // ⬅️ ใส่ career_id ตรงนี้ (อยู่ในสcopeเดียวกับ requestBuilder)
                 requestBuilder.addFormDataPart("career_id", getSelectedCareerId().toString())
@@ -756,7 +760,9 @@ class ProfileFragment : Fragment() {
             // 🔧 รองรับทั้ง snake_case/camelCase: career_id / careerID / careerId
             career_id = optIntAny(jsonObject, "career_id", "careerID", "careerId", default = 0),
             // 🔧 รองรับทั้ง snake_case/camelCase: career_name / careerName / career
-            career_name = optStringAny(jsonObject, "career_name", "careerName", "career", default = null)
+            career_name = optStringAny(jsonObject, "career_name", "careerName", "career", default = null),
+
+            bio = jsonObject.optString("bio", null),   // ✅ เพิ่มตรงนี้
         )
     }
 }
