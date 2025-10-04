@@ -17,11 +17,13 @@ import kotlinx.coroutines.launch
 import android.animation.AnimatorSet
 import th.ac.rmutto.finlove.R
 import th.ac.rmutto.finlove.HelpNavigatorViewModel
-import th.ac.rmutto.finlove.UiState        // <<<<<<<<<< สำคัญ: import UiState
+import th.ac.rmutto.finlove.UiState
 import th.ac.rmutto.finlove.utils.AnimationHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.view.isVisible
 import androidx.core.view.isInvisible
+import androidx.navigation.fragment.findNavController
+import th.ac.rmutto.finlove.BubbleAction
 
 class HelpNavigatorFragment : Fragment() {
 
@@ -42,6 +44,9 @@ class HelpNavigatorFragment : Fragment() {
     ): View {
         val v = inflater.inflate(R.layout.fragment_reccomendprofile, container, false)
 
+        // ✅ ย้ายมาไว้ในบอดี้ — ตั้ง baseUrl ที่นี่
+        vm.baseUrl = getString(R.string.root_url).trimEnd('/')
+
         btnHelpNow = v.findViewById(R.id.btnHelpNow)
         btnNotNow  = v.findViewById(R.id.btnNotNow)
         imgMascot  = v.findViewById(R.id.imgMascot)
@@ -51,8 +56,7 @@ class HelpNavigatorFragment : Fragment() {
             TextView(requireContext()).apply {
                 setPadding(18, 18, 18, 18)
                 textSize = 20f
-                // ถ้ามี background bubble ให้ตั้งที่นี่ได้ เช่น:
-                // setBackgroundResource(R.drawable/bg_speech_bubble_down)
+                // setBackgroundResource(R.drawable.bg_speech_bubble_down)
             }
         }
         txtQuestion.inAnimation = AlphaAnimation(0f, 1f).apply { duration = 250 }
@@ -61,24 +65,32 @@ class HelpNavigatorFragment : Fragment() {
         // ปุ่ม
         btnHelpNow.setOnClickListener {
             val userId = requireActivity().intent.getIntExtra("userID", -1).takeIf { it != -1 }
-            vm.confirm(userId)            // << เริ่ม Loading → Result
+            vm.confirm(userId) // เริ่ม Loading → Result (ยิง API จริงแล้ว)
         }
         btnNotNow.setOnClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
-            // หรือถ้าต้องการแค่ข้ามคำถามตอน Intro:
-            // vm.nextNow()
         }
-        // new ก่อนใช้เสมอ
+
         bubbleAdapter = BubbleAdapter { action ->
-            // นำทางเหมือนด้านบน
+            when (action) {
+                is BubbleAction.OpenProfileSection -> {
+                    val args = Bundle().apply {
+                        putBoolean("edit_mode", true)            // จะเปิดโหมดแก้ไข (ถ้าต้องการ)
+                        putString("open_section", action.section) // เช่น "bio"
+                    }
+                    findNavController().navigate(R.id.navigation_profile, args)
+                }
+                else -> Unit
+            }
         }
 
         rvResult = v.findViewById<RecyclerView>(R.id.rvResult).apply {
             adapter = bubbleAdapter
+            // ✅ ต้องมี layoutManager ไม่งั้น RecyclerView ไม่แสดง
+            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
             visibility = View.GONE
         }
 
-        // (ลบ setOnClickListener ซ้ำซ้อนอันเก่า ๆ ออกให้หมดนะครับ)
         return v
     }
 
@@ -102,7 +114,7 @@ class HelpNavigatorFragment : Fragment() {
                                 vm.start(userId = null, intervalMs = 6000L)
                             }
                             is UiState.Loading -> {
-                                btnHelpNow.isInvisible = true   // แทน isVisible = false
+                                btnHelpNow.isInvisible = true
                                 btnNotNow.isInvisible  = true
                                 rvResult?.isVisible  = false
                                 txtQuestion.isVisible = true
@@ -118,7 +130,6 @@ class HelpNavigatorFragment : Fragment() {
                         }
                     }
                 }
-
 
                 // 2) หมุนคำถามเฉพาะตอนอยู่ Intro
                 launch {
@@ -147,6 +158,6 @@ class HelpNavigatorFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        vm.stop() // หยุดหมุนคำถามเมื่อจอไม่ foreground
+        vm.stop()
     }
 }

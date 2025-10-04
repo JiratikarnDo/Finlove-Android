@@ -464,6 +464,7 @@ class HomeFragment : Fragment() {
                             preferences = user.preferences,
                             bio = bio
                         )
+                        Log.d("ShowBioSheet", "🔍 user=${user.nickname}, bio=${bio}")
                         bioBottomSheet.show(childFragmentManager, "BioBottomSheet")
                     }
                 } catch (e: Exception) {

@@ -40,7 +40,13 @@ import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
-
+import android.graphics.Rect
+import android.widget.ScrollView
+import android.graphics.drawable.GradientDrawable
+import android.animation.ObjectAnimator
+import android.animation.AnimatorSet
+import android.graphics.Color
+import android.view.animation.OvershootInterpolator
 
 class ProfileFragment : Fragment() {
 
@@ -76,6 +82,9 @@ class ProfileFragment : Fragment() {
     private lateinit var spinnerCareer: Spinner
     private lateinit var careerNames: Array<String>
     private lateinit var careerIds: Array<String>
+    private lateinit var labelCompleteness: TextView
+    private lateinit var pbCompleteness: ProgressBar
+    private lateinit var txtCompleteness: TextView
 
     private lateinit var user: User // ประกาศตัวแปร user ที่คลาส level
 
@@ -86,11 +95,16 @@ class ProfileFragment : Fragment() {
     private lateinit var buttonVerify: Button
     private lateinit var buttonLogout: Button
     private lateinit var buttonDeleteAccount: Button
+    private lateinit var provinceList: List<String>
     private var selectedImageUri: Uri? = null
     private var selectedDateOfBirth: String? = null
     private var isEditing = false
     private val PICK_IMAGE_REQUEST = 1
     private val REQUEST_CODE_CHANGE_PREFERENCES = 1001
+
+    // ด้านบนในคลาส ProfileFragment
+    private var pendingOpenSection: String? = null
+    private var pendingEditMode: Boolean = false
 
     private lateinit var originalUser: User
     private lateinit var currentUser: User
@@ -103,12 +117,42 @@ class ProfileFragment : Fragment() {
         // Initialize views
         initializeViews(root)
 
+        labelCompleteness = root.findViewById(R.id.labelCompleteness)
+        pbCompleteness    = root.findViewById(R.id.profileCompletenessBar)
+        txtCompleteness   = root.findViewById(R.id.txtCompleteness)
+
+// โชว์ตั้งแต่แรก และให้เป็น indeterminate จนกว่าจะได้คะแนนจริง
+        labelCompleteness.visibility = View.VISIBLE
+        pbCompleteness.visibility    = View.VISIBLE
+        txtCompleteness.visibility   = View.VISIBLE
+
+        pbCompleteness.isIndeterminate = true
+        txtCompleteness.text = "กำลังประเมิน…"
+
+        // ✅ รับพารามิเตอร์นำทางจากหน้า Help
+        pendingEditMode   = arguments?.getBoolean("edit_mode") == true
+        pendingOpenSection = arguments?.getString("open_section")
+
+        if (pendingEditMode) {
+            // จะเปิดแก้ไขทันทีไหม? (ถ้าอยากไฮไลต์เฉยๆ ไม่ต้องเปิดก็ได้)
+            isEditing = true
+            setEditingEnabled(true)
+            showAllFields()
+            textViewBio.isEnabled = true
+
+            // ✅ เอาปุ่มที่ hide กลับมาให้เหมือน toggleEditMode()
+            buttonSaveProfile.visibility = View.VISIBLE
+            buttonEditPreferences.visibility = View.VISIBLE
+            buttonDeleteAccount.visibility = View.VISIBLE
+        }
+
         // Fetch user ID from intent
         val userID = requireActivity().intent.getIntExtra("userID", -1)
         Log.d("ProfileFragment", "Received userID: $userID")
 
         if (userID != -1) {
             fetchUserInfo(userID)
+            fetchProfileCompleteness(userID)
         } else {
             Toast.makeText(requireContext(), "ไม่พบ userID", Toast.LENGTH_LONG).show()
         }
@@ -240,13 +284,26 @@ class ProfileFragment : Fragment() {
         spinnerInterestGender.adapter = interestGenderAdapter
 
         // Spinner จังหวัด
-        val provinceAdapter = ArrayAdapter.createFromResource(
+        // Spinner จังหวัด (มี placeholder แถวแรก และทำให้แถวแรกกดไม่ได้)
+        val provinces = resources.getStringArray(R.array.province_display_array).toMutableList()
+        provinces.add(0, "กรุณาเลือกจังหวัด")
+
+        val provinceAdapter = object : ArrayAdapter<String>(
             requireContext(),
-            R.array.province_display_array, // อ้างอิงจาก strings.xml
-            android.R.layout.simple_spinner_item
-        )
+            android.R.layout.simple_spinner_item,
+            provinces
+        ) {
+            override fun isEnabled(position: Int): Boolean = position != 0
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val v = super.getDropDownView(position, convertView, parent) as TextView
+                v.setTextColor(if (position == 0) Color.GRAY else Color.BLACK)
+                return v
+            }
+        }
         provinceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerProvince.adapter = provinceAdapter
+        // ⬅️ เก็บลิสต์ไว้ใช้นอกฟังก์ชัน
+        provinceList = provinces
 
         // ===== Career (อาชีพ) =====
         careerNames = resources.getStringArray(R.array.career_name_array)
@@ -283,6 +340,18 @@ class ProfileFragment : Fragment() {
 
             // Enable textViewBio when editing mode is turned on
             textViewBio.isEnabled = true
+
+            // ✅ แก้ชนกันระหว่าง baseline กับ top ของ labelProvince (ครั้งแรกที่เข้า edit)
+            spinnerProvince.post {
+                val lp = labelProvince.layoutParams
+                        as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+                lp.baselineToBaseline = spinnerProvince.id
+                lp.topToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                lp.topToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                lp.bottomToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                lp.bottomToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+                labelProvince.layoutParams = lp
+            }
         } else {
             restoreOriginalUserInfo()
             hideFieldsForViewingMode() // ซ่อนฟิลด์ที่ไม่จำเป็นเมื่อออกจากโหมดแก้ไข
@@ -393,6 +462,12 @@ class ProfileFragment : Fragment() {
                         setCareerFromApi(user.career_id)
                         verifyBadge.visibility = if (user.verify == 1) View.VISIBLE else View.GONE
                         buttonVerify.visibility = if (user.verify == 1) View.GONE else View.VISIBLE
+
+                        // ✅ ไฮไลต์ section ที่ส่งมาจากหน้า Help (ทำหลังอัปเดตฟิลด์แล้ว)
+                        pendingOpenSection?.let { section ->
+                            highlightSection(section)
+                            pendingOpenSection = null
+                        }
                     }
                 } else {
                     withContext(Dispatchers.Main) {
@@ -444,10 +519,28 @@ class ProfileFragment : Fragment() {
             spinnerGoal.setSelection(goalIndex)
         }
 
-        val provinceArray = resources.getStringArray(R.array.province_display_array)
-        val provinceIndex = provinceArray.indexOf(user.province)
-        if (provinceIndex >= 0) {
-            spinnerProvince.setSelection(provinceIndex)
+        // --- Bio: กัน "null"/"undefined" โผล่ในช่อง ---
+        val bioText = user.bio?.trim()
+            ?.takeUnless { it.equals("null", true) || it.equals("undefined", true) }
+            ?: ""
+        textViewBio.setText(bioText)
+        if (bioText.isEmpty()) {
+            textViewBio.hint = "กรอกข้อมูลเกี่ยวกับตัวเอง"
+        }
+
+        // --- Province: ใช้ลิสต์ที่มี placeholder แถว 0 ---
+        val rawProvince = user.province?.trim().orEmpty()
+        val provinceIdx = when {
+            rawProvince.isBlank() || rawProvince.equals("null", true) -> 0  // ชี้ไป placeholder
+            ::provinceList.isInitialized -> provinceList.indexOf(rawProvince).takeIf { it >= 0 } ?: 0
+            else -> 0
+        }
+        spinnerProvince.setSelection(provinceIdx, false)
+// ให้หัวสปินเนอร์เป็นสีเทาถ้าอยู่ที่ placeholder
+        spinnerProvince.post {
+            (spinnerProvince.selectedView as? TextView)?.setTextColor(
+                if (spinnerProvince.selectedItemPosition == 0) Color.GRAY else Color.BLACK
+            )
         }
 
         val interestGenderValueArray = resources.getStringArray(R.array.interest_gender_array)
@@ -533,9 +626,14 @@ class ProfileFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     if (success) {
                         Toast.makeText(requireContext(), "บันทึกข้อมูลสำเร็จ", Toast.LENGTH_SHORT).show()
+                        // ✅ ให้ ProgressBar เป็น indeterminate ระหว่างคำนวณใหม่
+                        pbCompleteness.isIndeterminate = true
+                        txtCompleteness.text = "กำลังประเมิน…"
 
                         delay(600)
                         fetchUserInfo(userID)
+                        // ✅ ยิงขอคะแนนความสมบูรณ์ใหม่ทันที (ไม่ต้องกดปุ่มคำแนะนำ)
+                        fetchProfileCompleteness(userID)
 
                         setEditingEnabled(false)
                         hideFieldsForViewingMode()
@@ -764,5 +862,169 @@ class ProfileFragment : Fragment() {
 
             bio = jsonObject.optString("bio", null),   // ✅ เพิ่มตรงนี้
         )
+    }
+    private fun highlightSection(section: String) {
+        val ids = when (section) {
+            "bio"            -> listOf(R.id.edtBio)
+            "photo"          -> listOf(R.id.imageViewProfile)
+            "verify"         -> listOf(R.id.buttonVerify)
+            "preferences"    -> listOf(R.id.preferenceContainer, R.id.buttonEditPreferences)
+            "home"           -> listOf(R.id.textViewHome)
+            "province"       -> listOf(R.id.spinnerProvince)
+            "location"       -> listOf(R.id.spinnerProvince, R.id.textViewHome)
+            "goal"           -> listOf(R.id.spinnerGoal, R.id.spinnerInterestGender)
+            "gender"         -> listOf(R.id.spinnerGender)               // ✅ ใหม่
+            "birthday"       -> listOf(R.id.buttonSelectDateProfile)     // ✅ ใหม่
+            "nickname"       -> listOf(R.id.textViewNickname)
+            "education"      -> listOf(R.id.spinnerEducation)
+            "career"         -> listOf(R.id.spinnerCareer)
+            "profile"        -> listOf(R.id.textViewFirstName, R.id.textViewLastName, R.id.spinnerGender, R.id.buttonSelectDateProfile)
+            else             -> listOf(R.id.edtBio)
+        }
+        highlightViews(ids)
+    }
+
+    private fun highlightViews(candidateIds: List<Int>) {
+        val root = view ?: return
+        val target = candidateIds
+            .mapNotNull { root.findViewById<View>(it) }
+            .firstOrNull() ?: return
+
+        target.post {
+            // เลื่อนให้เห็นก่อน
+            root.findViewById<ScrollView>(R.id.profileScrollView)?.let { scroll ->
+                val rect = Rect()
+                target.getDrawingRect(rect)
+                scroll.offsetDescendantRectToMyCoords(target, rect)
+                scroll.smoothScrollTo(0, maxOf(0, rect.top - dp(32)))
+            }
+
+            // เคสพิเศษ: กล่อง "ความชอบ"
+            if (target.id == R.id.preferenceContainer && target is LinearLayout) {
+                if (target.childCount > 0) {
+                    // มีแท็กแล้ว → ไฮไลต์แท็ก 2–3 อันแรก
+                    val n = minOf(3, target.childCount)
+                    for (i in 0 until n) {
+                        val chip = target.getChildAt(i)
+                        pulseHighlight(chip)
+                        flashStroke(chip, duration = 5000L)
+                    }
+                } else {
+                    // ยังไม่มีแท็ก → ไฮไลต์ปุ่มแก้ไขความชอบ
+                    root.findViewById<View>(R.id.buttonEditPreferences)?.let { btn ->
+                        pulseHighlight(btn)
+                        flashStroke(btn, duration = 2200L)
+                    }
+                }
+            } else {
+                // เคสทั่วไป
+                pulseHighlight(target)
+                flashStroke(target)
+            }
+        }
+    }
+
+    private fun dp(value: Int): Int {
+        val dm = resources.displayMetrics
+        return (value * dm.density).toInt()
+    }
+
+    private fun pulseHighlight(v: View, pulses: Int = 2) {
+        val overlay = android.graphics.drawable.ColorDrawable(android.graphics.Color.parseColor("#FFF4C2"))
+        overlay.alpha = 0
+        v.overlay.add(overlay)
+
+        val anim = android.animation.ObjectAnimator.ofInt(overlay, "alpha", 0, 170, 0).apply {
+            duration = 650
+            repeatCount = pulses - 1
+            interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    v.overlay.remove(overlay)
+                }
+            })
+        }
+        anim.start()
+    }
+    private fun flashStroke(
+        v: View,
+        color: Int = 0xFFE53935.toInt(),
+        duration: Long = 6000L,
+        cornerRadiusDp: Int = 12,
+        strokeWidthDp: Int = 3
+    ) {
+        // วาดแค่เส้นขอบบน overlay (ไม่แตะ background เดิม)
+        val stroke = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(Color.TRANSPARENT)                    // โปร่งใสจริง ๆ
+            cornerRadius = dp(cornerRadiusDp).toFloat()    // โค้งให้ใกล้เคียงปุ่มเดิม
+            setStroke(dp(strokeWidthDp), color)            // เส้นขอบแดง
+        }
+        // ต้องมีขนาดแล้ว → เราเรียกใน target.post { ... } อยู่แล้ว
+        stroke.setBounds(0, 0, v.width, v.height)
+        v.overlay.add(stroke)
+
+        v.postDelayed({
+            v.overlay.remove(stroke)                       // เอาออกหลังครบเวลา
+        }, duration)
+    }
+    private fun fetchProfileCompleteness(userID: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val url = getString(R.string.root_url) + "/api_v2/profile/recommend/$userID"
+                val req = Request.Builder()
+                    .url(url)
+                    .get()
+                    .addHeader("Accept", "application/json")
+                    .build()
+
+                val resp = OkHttpClient().newCall(req).execute()
+                val body = resp.body?.string().orEmpty()
+
+                if (!resp.isSuccessful) throw RuntimeException("HTTP ${resp.code}: ${body.take(200)}")
+
+                val obj = org.json.JSONObject(body)
+                val score = obj.optInt("score", 0) // 0..100
+                val comp  = obj.optString("completeness", "")
+
+                withContext(Dispatchers.Main) {
+                    // เปลี่ยนจาก indeterminate -> determinate แล้วอัปเดตค่า
+                    pbCompleteness.isIndeterminate = false
+                    pbCompleteness.max = 100
+
+                    // สีตามช่วงคะแนน
+                    val color = when {
+                        score >= 80 -> android.graphics.Color.parseColor("#2E7D32") // เขียว
+                        score >= 50 -> android.graphics.Color.parseColor("#F9A825") // เหลือง
+                        else        -> android.graphics.Color.parseColor("#D32F2F") // แดง
+                    }
+                    if (android.os.Build.VERSION.SDK_INT >= 21) {
+                        pbCompleteness.progressTintList =
+                            android.content.res.ColorStateList.valueOf(color)
+                        pbCompleteness.progressBackgroundTintList =
+                            android.content.res.ColorStateList.valueOf(0x22000000.toInt())
+                    } else {
+                        @Suppress("DEPRECATION")
+                        pbCompleteness.progressDrawable.setColorFilter(
+                            color, android.graphics.PorterDuff.Mode.SRC_IN
+                        )
+                    }
+
+                    // อนิเมชันเลื่อนค่า
+                    android.animation.ObjectAnimator.ofInt(
+                        pbCompleteness, "progress", pbCompleteness.progress, score
+                    ).apply { duration = 600 }.start()
+
+                    txtCompleteness.text = if (comp.isNotBlank()) comp else "$score%"
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    // ถ้าพลาด ให้คงบาร์ไว้แต่บอกสถานะ
+                    pbCompleteness.isIndeterminate = false
+                    pbCompleteness.progress = 0
+                    txtCompleteness.text = "—%"
+                }
+            }
+        }
     }
 }
