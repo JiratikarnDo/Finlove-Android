@@ -24,6 +24,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import androidx.appcompat.app.AlertDialog  // <-- เพิ่มบรรทัดนี้
 
 class AddphotoActivity : AppCompatActivity() {
 
@@ -105,55 +106,94 @@ class AddphotoActivity : AppCompatActivity() {
         outputStream.close()
         return Uri.fromFile(file)
     }
+    // ✅ เพิ่ม: ฟังก์ชันแสดง Popup มาตรฐาน
+    private fun showResultDialog(title: String, message: String, onOk: (() -> Unit)? = null) {
+        if (isFinishing) return
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("ตกลง") { dlg, _ ->
+                dlg.dismiss()
+                onOk?.invoke()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    // ✅ เพิ่ม: ฟังก์ชันแสดง Popup สำหรับข้อผิดพลาด
+    private fun showErrorDialog(message: String, onOk: (() -> Unit)? = null) {
+        showResultDialog("แจ้งเตือน", message, onOk)
+    }
+    // ✅ เพิ่ม: รวม logic แปลงข้อความจาก API → ภาษาผู้ใช้ (ไม่โชว์คำว่า SPOOF/score)
+    private fun makeFriendlyMessage(isLive: Boolean, detail: String?): Pair<String, String> {
+        val d = (detail ?: "").lowercase()
+        val noFace = d.contains("ไม่พบใบหน้า") || d.contains("no face")
+        return when {
+            isLive -> "ยืนยันสำเร็จ" to "ยืนยันตัวตนเรียบร้อย"
+            noFace -> "ไม่พบใบหน้า" to "กรุณามองกล้องโดยตรง จัดใบหน้าให้อยู่กึ่งกลาง และถ่ายในที่ที่มีแสงเพียงพอ"
+            else   -> "ยืนยันไม่สำเร็จ" to "กรุณาลองใหม่ โดยถือเครื่องให้นิ่ง ไม่ใส่หน้ากาก/หมวก/แว่นสะท้อนแสง และถ่ายในที่สว่างเพียงพอ"
+        }
+    }
 
     private fun sendImageForVerification(imageUri: Uri) {
-        val url = getString(R.string.root_url3) + "/ai/predict"  // ใช้ URL จาก resource string
+        // ถ้า root_url3 คือ http://<IP>:8000
+        val url = getString(R.string.root_url4) + "/api/v1/liveness_check"
 
         val imagePath = imageUri.path ?: ""
         val imageFile = File(imagePath)
-
         if (!imageFile.exists()) {
-            Toast.makeText(this, "File not found at: $imagePath", Toast.LENGTH_SHORT).show()
+            showErrorDialog("ไม่พบไฟล์ภาพที่: $imagePath")
             return
         }
 
+        // ⬅️ เปลี่ยนชื่อฟิลด์เป็น "file" ตาม FastAPI
         val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
-            .addFormDataPart("image", imageFile.name, imageFile.asRequestBody("image/*".toMediaTypeOrNull()))
-            .addFormDataPart("UserID", userID.toString())  // ใช้ "UserID" ให้ตรงกับฝั่ง server
+            .addFormDataPart(
+                "file",
+                imageFile.name,
+                imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+            )
+            .addFormDataPart("user_id", userID.toString())   // ✅ เพิ่มบรรทัดนี้
             .build()
 
         val request = Request.Builder().url(url).post(requestBody).build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
+                val bodyText = response.body?.string().orEmpty()
+
                 if (response.isSuccessful) {
-                    val jsonResponse = JSONObject(response.body?.string())
-                    val isHuman = jsonResponse.getBoolean("is_human")
-                    val confidenceScore = jsonResponse.getDouble("confidence_score")
+                    val json = JSONObject(bodyText)
+                    val isLive = json.optBoolean("is_live", false)
+                    // 🧹 ไม่ใช้งาน score/ข้อความโปรแกรมมิง
+                    // val score  = json.optDouble("score", Double.NaN)
+                    // val msg    = json.optString("message")
+                    val detail = json.optString("detail")
+
+                    // ✅ เปลี่ยน: ใช้ภาษาผู้ใช้เสมอ
+                    val (title, message) = makeFriendlyMessage(isLive, detail)
 
                     runOnUiThread {
-                        Toast.makeText(
-                            this@AddphotoActivity,
-                            if (isHuman) "ยืนยันตัวตนเรียบร้อย" else "ยืนยันตัวตนไม่สำเร็จกรุณาลองใหม่อีกครั้ง",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        val intent = Intent(this@AddphotoActivity, MainActivity::class.java)
-                        intent.putExtra("userID", userID)
-                        intent.putExtra("navigateToProfile", true)
-                        startActivity(intent)
-                        finish()
+                        // ✅ เปลี่ยน: Popup + กดตกลงค่อยกลับหน้า Main
+                        showResultDialog(title, message) {
+                            val intent = Intent(this@AddphotoActivity, MainActivity::class.java)
+                            intent.putExtra("userID", userID)
+                            intent.putExtra("navigateToProfile", true)
+                            startActivity(intent)
+                            finish()
+                        }
                     }
                 } else {
+                    // ✅ เปลี่ยน: ไม่โชว์โค้ด/ดีเทลเทคนิคกับผู้ใช้
                     runOnUiThread {
-                        Toast.makeText(this@AddphotoActivity, "ยืนยันตัวตนไม่สำเร็จกรุณาลองใหม่อีกครั้ง", Toast.LENGTH_SHORT).show()
+                        showErrorDialog("ไม่สามารถยืนยันตัวตนได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง")
                     }
                 }
             }
-
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    Toast.makeText(this@AddphotoActivity, "Network request failed", Toast.LENGTH_SHORT).show()
+                    // ❌ เดิม: Toast → ✅ ใหม่: Popup
+                    showErrorDialog("เชื่อมต่อกับเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต/เครือข่าย แล้วลองใหม่อีกครั้ง")
                 }
             }
         })

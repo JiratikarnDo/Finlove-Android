@@ -13,6 +13,7 @@
     <string name="root_url">http://192.168.1.33:8501</string>
     <string name="root_url2">http://192.168.1.33:6502</string>
     <string name="root_url3">http://192.168.1.33:6501</string>
+    <string name="root_url4">http://192.168.1.33:8000</string>
 
 
     <string-array name="education_levels">
