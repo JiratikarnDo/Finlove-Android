@@ -31,7 +31,14 @@ import th.ac.rmutto.finlove.R
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import androidx.appcompat.app.AlertDialog
-
+import java.util.Locale
+import kotlin.math.roundToInt
+import java.text.NumberFormat
+import android.Manifest
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.location.FusedLocationProviderClient
 
 // ================== Data Classes ==================
 data class RecommendResponse(
@@ -71,7 +78,6 @@ interface ApiService {
     @GET("/ai_v2/recommend_places/{match_id}")
     fun getRecommendPlaces(@Path("match_id") matchId: Int): Call<RecommendResponse>
 }
-
 class DatingPlaceFragment : Fragment() {
     private lateinit var txtTitle: TextView
     private lateinit var txtDescription: TextView
@@ -90,9 +96,18 @@ class DatingPlaceFragment : Fragment() {
     private var currentIndex = 0
     private var placeList: List<Place> = emptyList()
 
-    // ตำแหน่งสมมติของผู้ใช้
-    private val userLat = 13.7563
-    private val userLng = 100.5018
+    // ✅ พิกัดของ "คนที่เปิดจอ" (viewer)
+    private var userLat: Double? = null
+    private var userLng: Double? = null
+
+    // ✅ เพิ่ม: ตัวดึงพิกัด + ตัวขอ permission
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val locationPermLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { perms ->
+            val ok = (perms[android.Manifest.permission.ACCESS_FINE_LOCATION] == true) ||
+                    (perms[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true)
+            if (ok) getViewerLocation()
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -116,6 +131,19 @@ class DatingPlaceFragment : Fragment() {
         dot1 = view.findViewById(R.id.dot1)
         dot2 = view.findViewById(R.id.dot2)
         dot3 = view.findViewById(R.id.dot3)
+
+        // อ่านพิกัดจาก args/SP ถ้ามี (ของเดิม)
+        userLat = arguments?.getDouble("viewerLat", Double.NaN)?.takeIf { it.isFinite() }
+        userLng = arguments?.getDouble("viewerLng", Double.NaN)?.takeIf { it.isFinite() }
+        if (userLat == null || userLng == null) {
+            val prefs = requireContext().getSharedPreferences("user_loc", android.content.Context.MODE_PRIVATE)
+            userLat = prefs.getString("lat", null)?.toDoubleOrNull()
+            userLng = prefs.getString("lng", null)?.toDoubleOrNull()
+        }
+
+        // ✅ ใหม่: ดึงพิกัดสดของผู้ใช้ในหน้านี้เอง
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        ensureViewerLocation()
 
         // โหลดข้อมูลจาก API
         loadPlacesFromApi(matchID)
@@ -145,10 +173,9 @@ class DatingPlaceFragment : Fragment() {
                     "📍 ${place.title}\n" +
                     "📝 ${place.description}\n" +
                     "🌐 ${txtLocation.text}" +
-                    "🌐 ${place.gmapsUrl}"  // ส่ง URL เต็มไปในข้อความ
+                    "🌐 ${place.gmapsUrl}"
 
-            val dialogView = LayoutInflater.from(requireContext())
-                .inflate(R.layout.dialog_confirm_date, null)
+            val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_confirm_date, null)
             val dialog = Dialog(requireContext())
             dialog.setContentView(dialogView)
             dialog.setCancelable(true)
@@ -158,9 +185,7 @@ class DatingPlaceFragment : Fragment() {
             val btnCancel = dialogView.findViewById<Button>(R.id.btnCancel)
 
             txtMessage.text = "คุณต้องการชวนอีกฝ่ายไปสถานที่นี้หรือไม่?\n\n📍 ${place.title}"
-
-            // ตั้งค่าคลิกได้ที่ "ดูแผนที่"
-            txtMessage.movementMethod = LinkMovementMethod.getInstance()  // ใช้เพื่อให้ข้อความที่เป็นลิงก์สามารถคลิกได้
+            txtMessage.movementMethod = LinkMovementMethod.getInstance()
 
             btnConfirm.setOnClickListener {
                 dialog.dismiss()
@@ -183,7 +208,98 @@ class DatingPlaceFragment : Fragment() {
         return view
     }
 
-    // บนคลาส DatingPlaceFragment (ใส่ตรงไหนก็ได้ในคลาส)
+    // ✅ ขอสิทธิ์ → ดึงพิกัด → เซฟ + รีเฟรช UI
+    private fun ensureViewerLocation() {
+        val fineGranted = androidx.core.app.ActivityCompat.checkSelfPermission(
+            requireContext(), android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val coarseGranted = androidx.core.app.ActivityCompat.checkSelfPermission(
+            requireContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (!fineGranted && !coarseGranted) {
+            locationPermLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+            return
+        }
+        getViewerLocation()
+    }
+
+    private fun getViewerLocation() {
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { loc: Location? ->
+                if (loc != null) {
+                    onViewerLocationReady(loc)
+                } else {
+                    val hasFine = androidx.core.app.ActivityCompat.checkSelfPermission(
+                        requireContext(), android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    val priority = if (hasFine) Priority.PRIORITY_HIGH_ACCURACY
+                    else Priority.PRIORITY_BALANCED_POWER_ACCURACY
+
+                    val cts = com.google.android.gms.tasks.CancellationTokenSource()
+                    fusedLocationClient.getCurrentLocation(priority, cts.token)
+                        .addOnSuccessListener { now: Location? ->
+                            if (now != null) onViewerLocationReady(now)
+                        }
+                        .addOnFailureListener { e: Exception ->
+                            Log.w("DatingPlace", "getCurrentLocation failed: ${e.message}")
+                        }
+                }
+            }
+            .addOnFailureListener { e: Exception ->
+                Log.w("DatingPlace", "getCurrentLocation failed: ${e.message}")
+            }
+    }
+
+    private fun onViewerLocationReady(loc: Location) {
+        userLat = loc.latitude
+        userLng = loc.longitude
+        // เก็บลง SharedPreferences ไว้ใช้ครั้งหน้า
+        val sp = requireContext().getSharedPreferences("user_loc", android.content.Context.MODE_PRIVATE)
+        sp.edit().putString("lat", userLat.toString())
+            .putString("lng", userLng.toString())
+            .apply()
+        // ถ้ามีรายการสถานที่แล้ว → รีเฟรชให้เลิกขึ้น "กำลังระบุตำแหน่ง…"
+        if (placeList.isNotEmpty()) showPlace(currentIndex)
+    }
+    // --- OSRM: ระยะทางตามถนน ---
+    private val osrmClient by lazy {
+        okhttp3.OkHttpClient.Builder()
+            .callTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+    }
+
+    private fun fetchRoadDistanceMetersOSRM(
+        startLat: Double, startLng: Double,
+        endLat: Double, endLng: Double,
+        profile: String = "driving",
+        onResult: (Long?) -> Unit
+    ) {
+        val url = "https://router.project-osrm.org/route/v1/$profile/" +
+                "$startLng,$startLat;$endLng,$endLat?overview=false&alternatives=false&steps=false"
+
+        // ใช้ OkHttp ตรง ๆ เพื่อให้แยกจาก Retrofit ปัจจุบัน
+        Thread {
+            try {
+                val req = okhttp3.Request.Builder().url(url).build()
+                val resp = osrmClient.newCall(req).execute()
+                val body = resp.body?.string()
+                val distance = org.json.JSONObject(body ?: "{}")
+                    .getJSONArray("routes")
+                    .getJSONObject(0)
+                    .getLong("distance") // หน่วย: เมตร
+                requireActivity().runOnUiThread { onResult(distance) }
+            } catch (e: Exception) {
+                requireActivity().runOnUiThread { onResult(null) }
+            }
+        }.start()
+    }
+
     private fun showNoSpotsDialog() {
         if (!isAdded) return
 
@@ -196,28 +312,23 @@ class DatingPlaceFragment : Fragment() {
 
         val msg = android.text.SpannableStringBuilder().apply {
             append("ไม่สามารถหาสถานที่ที่เหมาะสมได้ในตอนนี้\n\n")
-
-            // หัวข้อ "เนื่องจาก:" เป็นตัวหนา
             val headerStart = length
             append("เนื่องจาก:\n")
             setSpan(
                 android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
                 headerStart, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             )
-
-            // bullet เหตุผล (คงข้อความเดิม)
             val bulletStart = length
             append("• คุณอาจอยู่ห่างกันเกินไป\n")
             setSpan(
                 android.text.style.LeadingMarginSpan.Standard(0, 36),
                 bulletStart, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             )
-
             append("กรุณาลองใหม่ภายหลัง")
         }
 
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setIcon(android.R.drawable.ic_dialog_info) // ไอคอนมาตรฐาน ปลอดภัย ไม่พัง R
+            .setIcon(android.R.drawable.ic_dialog_info)
             .setTitle(title)
             .setMessage(msg)
             .setCancelable(false)
@@ -228,13 +339,13 @@ class DatingPlaceFragment : Fragment() {
     }
 
     private fun loadPlacesFromApi(matchId: Int) {
-        val baseUrl = getString(R.string.root_url2)  // ดึงจาก strings.xml
+        val baseUrl = getString(R.string.root_url2)
 
         // ✅ แสดง dot loader
         dotContainer.visibility = View.VISIBLE
         startDotAnimation()
 
-        // ✅ แสดง ProgressBar ก่อนโหลด
+        // ✅ ซ่อนคอนเทนต์ระหว่างโหลด
         txtTitle.visibility = View.GONE
         txtDescription.visibility = View.GONE
         txtLocation.visibility = View.GONE
@@ -245,15 +356,15 @@ class DatingPlaceFragment : Fragment() {
         btnBackToChat.visibility = View.GONE
 
         val client = OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)  // รอ connect 30 วิ
-            .readTimeout(60, TimeUnit.SECONDS)     // รออ่านผล 60 วิ
-            .writeTimeout(60, TimeUnit.SECONDS)    // รอเขียน 60 วิ
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
 
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
-            .client(client)   // 👈 ผูก client ที่ตั้ง timeout
+            .client(client)
             .build()
 
         val api = retrofit.create(ApiService::class.java)
@@ -271,6 +382,7 @@ class DatingPlaceFragment : Fragment() {
                 btnPrev.visibility = View.VISIBLE
                 btnDate.visibility = View.VISIBLE
                 btnBackToChat.visibility = View.VISIBLE
+
                 if (response.isSuccessful) {
                     val recommend = response.body()
                     Log.d("API_DEBUG", "onResponse called, code=${response.code()}")
@@ -282,7 +394,7 @@ class DatingPlaceFragment : Fragment() {
                                 latitude = it.lat,
                                 longitude = it.lng,
                                 photoUrl = it.photo_url,
-                                gmapsUrl = it.gmaps_url   // ✅ ดึงมาด้วย
+                                gmapsUrl = it.gmaps_url
                             )
                         }
                         if (placeList.isEmpty()) {
@@ -306,13 +418,32 @@ class DatingPlaceFragment : Fragment() {
         })
     }
 
-    private fun showPlace(index: Int) {
+    // ใช้โลเคลไทย (จะได้รูปแบบเลข/คอมม่าแบบไทย)
+    private val TH = Locale("th", "TH")
+    private val nf0 = NumberFormat.getNumberInstance(TH).apply {
+        maximumFractionDigits = 0; minimumFractionDigits = 0; isGroupingUsed = true
+    }
+    private val nf1 = NumberFormat.getNumberInstance(TH).apply {
+        maximumFractionDigits = 1; minimumFractionDigits = 1; isGroupingUsed = true
+    }
 
-        // ✅ ป้องกัน crash ถ้า list ว่างหรือ index ไม่ถูกต้อง
+    /// แปลงเมตร -> ข้อความอ่านง่าย (ภาษาไทย)
+    private fun formatDistance(meters: Float): String {
+        if (meters.isNaN() || meters.isInfinite()) return "—"
+        val m = meters.coerceAtLeast(0f)
+        return when {
+            m < 1f        -> "<1 เมตร"
+            m < 1000f     -> "${nf0.format(((m / 10f).roundToInt() * 10))} ม."
+            m < 100_000f  -> "${nf1.format(m / 1000f)} กม."
+            else          -> "${nf0.format(m / 1000f)} กม."
+        }
+    }
+
+    private fun showPlace(index: Int) {
         if (placeList.isEmpty() || index !in placeList.indices) {
             txtTitle.text = "❌ ไม่มีสถานที่แนะนำ"
             txtDescription.text = "โปรดลองใหม่อีกครั้ง หรือขยายรัศมีค้นหา"
-            imagePlace.setImageResource(R.drawable.ic_edit) // placeholder
+            imagePlace.setImageResource(R.drawable.ic_edit)
             txtLocation.text = "ไม่มีพิกัดให้แสดง"
             return
         }
@@ -320,7 +451,6 @@ class DatingPlaceFragment : Fragment() {
         val place = placeList[index]
         txtTitle.text = place.title
 
-        // ✅ ถ้า description ว่าง → แสดงข้อความ fix
         val desc = if (place.description.isBlank() || place.description == "ไม่มีคำอธิบาย") {
             "ℹ️ ยังไม่มีรายละเอียดเพิ่มเติมสำหรับสถานที่นี้\n✨ แต่ที่นี่อาจเป็นจุดที่น่าสนใจสำหรับการนัดเดท!"
         } else {
@@ -331,56 +461,80 @@ class DatingPlaceFragment : Fragment() {
         Glide.with(this)
             .load(place.photoUrl)
             .placeholder(R.drawable.ic_edit)
-            .override(600, 400)        // กำหนดขนาดที่ต้องการ (px)
-            .centerCrop()              // ตัดกลางให้พอดีกับ ImageView
+            .override(600, 400)
+            .centerCrop()
             .into(imagePlace)
 
-        val distance = calculateDistance(userLat, userLng, place.latitude, place.longitude)
-        // ✅ ใช้ SpannableStringBuilder เพื่อกำหนด alignment แยกทีละบรรทัด
-        val text = "📍 พิกัดของสถานที่\nห่างจากคุณประมาณ %.1f กม.".format(distance / 1000)
-        val spannable = android.text.SpannableStringBuilder(text)
+        // ✅ ข้อความเริ่มต้น ระหว่างคำนวณระยะทาง "ตามถนน"
+        val baseText = "📍 พิกัดของสถานที่\nห่างจากคุณประมาณ (…)"
+        val baseSpan = android.text.SpannableStringBuilder(baseText).apply {
+            val start = baseText.indexOf("ห่างจากคุณ")
+            val end = baseText.length
+            setSpan(
+                android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER),
+                start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
 
-        // หาตำแหน่งของบรรทัด "ห่างจากคุณ..."
-        val start = text.indexOf("ห่างจากคุณ")
-        val end = text.length
-
-        // ✅ จัดให้บรรทัดนี้อยู่ตรงกลาง
-        spannable.setSpan(
-            android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER),
-            start, end,
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-
-        txtLocation.text = spannable
-        // สร้างข้อความลิงก์
+        // ✅ ต้องใส่บรรทัดนี้ก่อน append ลิงก์
+        txtLocation.text = baseSpan
+        // ✅ ลิงก์ Google Maps
         val linkText = getShortLink(place.gmapsUrl)
+        txtLocation.append("  ")
+        txtLocation.append(linkText)
+        txtLocation.movementMethod = LinkMovementMethod.getInstance()
 
-        // ตั้งค่าให้ TextView รองรับการคลิกที่ลิงก์
-        txtLocation.append("  ") // เพิ่มช่องว่างระหว่างข้อความ
-        txtLocation.append(linkText)  // เพิ่มลิงก์ที่สามารถคลิกได้
+        // ✅ ดึงระยะทาง "ตามถนน" มาแสดงแทนเลย
+        if (userLat != null && userLng != null) {
+            fetchRoadDistanceMetersOSRM(
+                userLat!!, userLng!!,
+                place.latitude, place.longitude,
+                profile = "driving" // หรือ "walking"/"cycling"
+            ) { roadMeters ->
+                // สร้างข้อความใหม่ (ใช้ตามถนนเป็นหลัก, ล้มเหลวค่อย fallback เส้นตรง)
+                val distanceText: String = if (roadMeters != null) {
+                    "(${formatDistance(roadMeters.toFloat())})"
+                } else {
+                    // fallback → เส้นตรง
+                    val straight = calculateDistance(userLat!!, userLng!!, place.latitude, place.longitude)
+                    "(${formatDistance(straight)})"
+                }
 
-        txtLocation.movementMethod = LinkMovementMethod.getInstance()  // ตั้งค่าให้สามารถคลิกลิงก์ได้
-    }
-
-    private fun showRetryDialog(message: String, onRetry: () -> Unit) {
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("โอ๊ะ! มีปัญหา")
-            .setMessage(message)
-            .setPositiveButton("ลองใหม่") { _, _ -> onRetry() }
-            .setNegativeButton("ปิด", null)
-            .show()
+                val finalText = "📍 พิกัดของสถานที่\nห่างจากคุณประมาณ $distanceText"
+                val span = android.text.SpannableStringBuilder(finalText).apply {
+                    val s = finalText.indexOf("ห่างจากคุณ")
+                    val e = finalText.length
+                    setSpan(
+                        android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER),
+                        s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+                // เขียนทับ + ใส่ลิงก์ใหม่ (เพื่อไม่ให้ซ้ำ)
+                txtLocation.text = span
+                txtLocation.append("  ")
+                txtLocation.append(linkText)
+            }
+        } else {
+            // ไม่มีพิกัดฝั่งผู้ใช้
+            val finalText = "📍 พิกัดของสถานที่\nห่างจากคุณประมาณ (กำลังระบุตำแหน่ง…)"
+            val span = android.text.SpannableStringBuilder(finalText).apply {
+                val s = finalText.indexOf("ห่างจากคุณ")
+                val e = finalText.length
+                setSpan(
+                    android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER),
+                    s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            txtLocation.text = span
+            txtLocation.append("  ")
+            txtLocation.append(linkText)
+        }
     }
 
     private fun handleHttpError(code: Int, matchId: Int) {
         when (code) {
-            404, 502, 503, 504 -> {
-                // ใช้ dialog แบบเดียวกับลิสต์ว่าง
-                showNoSpotsDialog()
-            }
-            else -> {
-                // เคสอื่นจะยังเป็น Toast เหมือนเดิม (ถ้าอยากให้เป็น dialog เดียวกันทั้งหมด ก็บอกได้)
-                Toast.makeText(requireContext(), "โหลดข้อมูลไม่สำเร็จ ($code)", Toast.LENGTH_SHORT).show()
-            }
+            404, 502, 503, 504 -> showNoSpotsDialog()
+            else -> Toast.makeText(requireContext(), "โหลดข้อมูลไม่สำเร็จ ($code)", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -395,6 +549,7 @@ class DatingPlaceFragment : Fragment() {
         }
         return userLocation.distanceTo(placeLocation)
     }
+
     private fun startDotAnimation() {
         val dots = listOf(dot1, dot2, dot3)
         for ((index, dot) in dots.withIndex()) {
@@ -411,25 +566,24 @@ class DatingPlaceFragment : Fragment() {
             }
         }
     }
+
     private fun getShortLink(url: String): SpannableString {
-        // ถ้า URL เป็น Google Maps จะทำให้ "ดูแผนที่" เป็นลิงก์ที่คลิกได้
         return if (url.startsWith("https://www.google.com/maps")) {
             val spanString = SpannableString("ดูแผนที่")
             spanString.setSpan(object : ClickableSpan() {
                 override fun onClick(widget: View) {
-                    // เปิด Google Maps
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     startActivity(intent)
                 }
             }, 0, spanString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             spanString
         } else {
-            SpannableString(url)  // ถ้าไม่ใช่ Google Maps ก็ให้แสดง URL ปกติ
+            SpannableString(url)
         }
     }
+
     private fun decorateDescription(rawText: String): String {
         val lower = rawText.lowercase()
-
         val icon = when {
             "coffee" in lower || "คาเฟ่" in lower || "cafe" in lower -> "☕ "
             "ramen" in lower || "ราเมน" in lower -> "\uD83C\uDF5C " // 🍜
@@ -439,9 +593,9 @@ class DatingPlaceFragment : Fragment() {
             "museum" in lower || "พิพิธภัณฑ์" in lower -> "\uD83C\uDFF0 " // 🏰
             else -> "ℹ️ "
         }
-
         return "$icon$rawText"
     }
+
     private fun getExtraMessage(description: String): String {
         val lower = description.lowercase()
         return when {
