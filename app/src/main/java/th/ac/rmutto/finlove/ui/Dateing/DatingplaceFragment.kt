@@ -157,7 +157,7 @@ class DatingPlaceFragment : Fragment() {
             val btnConfirm = dialogView.findViewById<Button>(R.id.btnConfirm)
             val btnCancel = dialogView.findViewById<Button>(R.id.btnCancel)
 
-            txtMessage.text = "คุณต้องการชวนอีกฝ่ายไปยังสถานที่นี้หรือไม่?\n\n📍 ${place.title}"
+            txtMessage.text = "คุณต้องการชวนอีกฝ่ายไปสถานที่นี้หรือไม่?\n\n📍 ${place.title}"
 
             // ตั้งค่าคลิกได้ที่ "ดูแผนที่"
             txtMessage.movementMethod = LinkMovementMethod.getInstance()  // ใช้เพื่อให้ข้อความที่เป็นลิงก์สามารถคลิกได้
@@ -181,6 +181,50 @@ class DatingPlaceFragment : Fragment() {
         }
 
         return view
+    }
+
+    // บนคลาส DatingPlaceFragment (ใส่ตรงไหนก็ได้ในคลาส)
+    private fun showNoSpotsDialog() {
+        if (!isAdded) return
+
+        val title = android.text.SpannableString("ไม่พบสถานที่แนะนำ").apply {
+            setSpan(
+                android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        val msg = android.text.SpannableStringBuilder().apply {
+            append("ไม่สามารถหาสถานที่ที่เหมาะสมได้ในตอนนี้\n\n")
+
+            // หัวข้อ "เนื่องจาก:" เป็นตัวหนา
+            val headerStart = length
+            append("เนื่องจาก:\n")
+            setSpan(
+                android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                headerStart, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
+            // bullet เหตุผล (คงข้อความเดิม)
+            val bulletStart = length
+            append("• คุณอาจอยู่ห่างกันเกินไป\n")
+            setSpan(
+                android.text.style.LeadingMarginSpan.Standard(0, 36),
+                bulletStart, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
+            append("กรุณาลองใหม่ภายหลัง")
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setIcon(android.R.drawable.ic_dialog_info) // ไอคอนมาตรฐาน ปลอดภัย ไม่พัง R
+            .setTitle(title)
+            .setMessage(msg)
+            .setCancelable(false)
+            .setPositiveButton("กลับไปแชท") { _, _ ->
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+            .show()
     }
 
     private fun loadPlacesFromApi(matchId: Int) {
@@ -242,14 +286,7 @@ class DatingPlaceFragment : Fragment() {
                             )
                         }
                         if (placeList.isEmpty()) {
-                            AlertDialog.Builder(requireContext())
-                                .setTitle("ไม่พบสถานที่แนะนำ")
-                                .setMessage("ระบบไม่สามารถหาสถานที่ที่เหมาะสมได้ในตอนนี้\nกรุณาลองใหม่ภายหลัง")
-                                .setCancelable(false)
-                                .setPositiveButton("กลับไปแชท") { _, _ ->
-                                    requireActivity().onBackPressed()
-                                }
-                                .show()
+                            showNoSpotsDialog()
                         } else {
                             currentIndex = 0
                             showPlace(currentIndex)
@@ -336,15 +373,14 @@ class DatingPlaceFragment : Fragment() {
 
     private fun handleHttpError(code: Int, matchId: Int) {
         when (code) {
-            404 -> showRetryDialog(
-                "ยังไม่มีพิกัดของคู่เดททั้งสองฝั่งหรือไม่ครบ\nกรุณาให้ทั้งสองคนเปิดแชร์ตำแหน่ง แล้วลองใหม่"
-            ) { loadPlacesFromApi(matchId) }
-
-            502, 503, 504 -> showRetryDialog(
-                "แหล่งข้อมูลภายนอกช้า/ล่มชั่วคราว (HTTP $code)\nลองใหม่อีกครั้งได้เลย"
-            ) { loadPlacesFromApi(matchId) }
-
-            else -> Toast.makeText(requireContext(), "โหลดข้อมูลไม่สำเร็จ ($code)", Toast.LENGTH_SHORT).show()
+            404, 502, 503, 504 -> {
+                // ใช้ dialog แบบเดียวกับลิสต์ว่าง
+                showNoSpotsDialog()
+            }
+            else -> {
+                // เคสอื่นจะยังเป็น Toast เหมือนเดิม (ถ้าอยากให้เป็น dialog เดียวกันทั้งหมด ก็บอกได้)
+                Toast.makeText(requireContext(), "โหลดข้อมูลไม่สำเร็จ ($code)", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

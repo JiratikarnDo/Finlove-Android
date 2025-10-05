@@ -256,6 +256,14 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    // ✅ จังหวัดถูกเลือกจริง? (ตำแหน่ง 0 = placeholder)
+    private fun isProvinceSelected(): Boolean =
+        spinnerProvince.selectedItemPosition > 0
+
+    // ✅ ได้ชื่อจังหวัดจริง (หรือ null ถ้ายังเป็น placeholder)
+    private fun getProvinceOrNull(): String? =
+        if (isProvinceSelected()) provinceList[spinnerProvince.selectedItemPosition] else null
+
     private fun setupSpinners() {
         val educationAdapter = ArrayAdapter.createFromResource(
             requireContext(),
@@ -575,7 +583,7 @@ class ProfileFragment : Fragment() {
                 val selectedInterestGender = interestGenderValueArray[spinnerInterestGender.selectedItemPosition]
                 val selectedEducation = spinnerEducation.selectedItem.toString()
                 val selectedGoal = spinnerGoal.selectedItem.toString()
-                val selectedProvince = spinnerProvince.selectedItem.toString()
+                val selectedProvince = getProvinceOrNull()  // ✅ sanitize แล้ว
 
                 val formattedDateBirth = selectedDateOfBirth ?: currentUser.dateBirth
 
@@ -593,7 +601,10 @@ class ProfileFragment : Fragment() {
                     .addFormDataPart("height", textViewHeight.text.toString())
                     .addFormDataPart("weight", textViewWeight.text.toString())
                     .addFormDataPart("home", textViewHome.text.toString())
-                    .addFormDataPart("province", selectedProvince)
+                    .apply {
+                        // ✅ ถ้าเลือกจังหวัดแล้วค่อยส่ง
+                        selectedProvince?.let { addFormDataPart("province", it) }
+                    }
                     .addFormDataPart("bio", textViewBio.text.toString())
 
                 // ⬅️ ใส่ career_id ตรงนี้ (อยู่ในสcopeเดียวกับ requestBuilder)

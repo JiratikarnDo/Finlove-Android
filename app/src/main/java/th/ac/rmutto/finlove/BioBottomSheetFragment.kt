@@ -3,6 +3,7 @@ package th.ac.rmutto.finlove
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import th.ac.rmutto.finlove.R
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
@@ -36,19 +37,26 @@ class BioBottomSheetFragment : BottomSheetDialogFragment() {
             ?.takeIf { !it.isNullOrBlank() && !it.equals("null", ignoreCase = true) }
             ?: "ไม่ระบุ"
 
-        // ✅ คำนวณอายุ
+        // ✅ คำนวณอายุ (คงโครงสร้างเดิมไว้ แต่เพิ่ม pattern/locale/timezone)
         val age = if (dateBirth.isNotEmpty()) {
             var dob: Date? = null
-            val patterns = listOf(
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            val patterns = listOf( // ★ รองรับหลายรูปแบบมากขึ้น
+                "yyyy-MM-dd'T'HH:mm:ss.SSSX",   // Z หรือ +07:00
+                "yyyy-MM-dd'T'HH:mm:ssX",       // Z หรือ +07:00
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", // literal 'Z'
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",     // literal 'Z'
                 "yyyy-MM-dd",
-                "EEE, dd MMM yyyy HH:mm:ss z"
+                "yyyy-MM-dd HH:mm:ss",
+                "dd/MM/yyyy",
+                "dd-MM-yyyy",
+                "EEE, dd MMM yyyy HH:mm:ss z"   // ต้องใช้ Locale อังกฤษ
             )
             for (p in patterns) {
                 try {
-                    val sdf = SimpleDateFormat(p, Locale.getDefault())
-                    if (p.contains("Z")) sdf.timeZone = TimeZone.getTimeZone("UTC")
+                    val loc = if (p.contains("MMM") || p.contains("EEE")) Locale.ENGLISH else Locale.getDefault() // ★
+                    val sdf = SimpleDateFormat(p, loc)
+                    // ★ บังคับ UTC เฉพาะแบบ literal 'Z' เพื่อไม่ทับ offset จริง
+                    if (p.endsWith("'Z'")) sdf.timeZone = TimeZone.getTimeZone("UTC")
                     dob = sdf.parse(dateBirth)
                     if (dob != null) break
                 } catch (_: Exception) { }
@@ -56,6 +64,7 @@ class BioBottomSheetFragment : BottomSheetDialogFragment() {
             if (dob != null) {
                 val today = Calendar.getInstance()
                 val cal = Calendar.getInstance().apply { time = dob }
+                // ตัวเดิมของคุณ (คงไว้)
                 var ageVal = today.get(Calendar.YEAR) - cal.get(Calendar.YEAR)
                 if (today.get(Calendar.DAY_OF_YEAR) < cal.get(Calendar.DAY_OF_YEAR)) ageVal--
                 ageVal
@@ -67,6 +76,7 @@ class BioBottomSheetFragment : BottomSheetDialogFragment() {
         } else {
             "ไม่ทราบอายุ"
         }
+
 
         // ✅ ใส่ค่า UI
         binding.textNickname.text = nickname
