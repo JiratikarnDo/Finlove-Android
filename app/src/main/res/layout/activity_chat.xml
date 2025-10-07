@@ -22,8 +22,9 @@
             android:layout_gravity="end"
             android:orientation="horizontal">
 
+            <!-- Combined Block/Unblock Button -->
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/buttonBlockChat"
+                android:id="@+id/buttonBlockUnblockChat"
                 android:layout_width="80dp"
                 android:layout_height="35dp"
                 android:text="บล็อค"
@@ -31,16 +32,6 @@
                 android:textColor="@android:color/black"
                 android:background="@drawable/button_normal"
                 android:layout_marginEnd="8dp" />
-
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/buttonUnblockChat"
-                android:layout_width="80dp"
-                android:layout_height="35dp"
-                android:text="เลิกบล็อค"
-                android:textSize="12sp"
-                android:textColor="@android:color/black"
-                android:background="@drawable/button_normal" />
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
 

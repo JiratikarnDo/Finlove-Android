@@ -63,7 +63,10 @@ class ChatActivity : AppCompatActivity() {
         senderID = intent.getIntExtra("senderID", -1)
         receiverNickname = intent.getStringExtra("nickname") ?: ""
 
-        Log.d("ChatActivity", "Received matchID: $matchID, senderID: $senderID, nickname: $receiverNickname")
+        Log.d(
+            "ChatActivity",
+            "Received matchID: $matchID, senderID: $senderID, nickname: $receiverNickname"
+        )
 
         if (matchID == -1 || senderID == -1) {
             Toast.makeText(this, "ไม่พบข้อมูลการสนทนา", Toast.LENGTH_LONG).show()
@@ -113,7 +116,6 @@ class ChatActivity : AppCompatActivity() {
         fetchChatMessages()
 
 
-
         // เมื่อผู้ใช้ส่งข้อความ
         binding.sendButton.setOnClickListener {
             val message = binding.messageInput.text.toString().trim()
@@ -122,20 +124,26 @@ class ChatActivity : AppCompatActivity() {
                 binding.messageInput.text.clear()
             }
         }
-
-        // กำหนดฟังก์ชันให้กับปุ่ม Block และ Unblock
-        binding.toolbar.findViewById<Button>(R.id.buttonBlockChat).setOnClickListener {
-            blockChat()
-        }
-        binding.toolbar.findViewById<Button>(R.id.buttonUnblockChat).setOnClickListener {
-            unblockChat()
-        }
         // ตรวจสอบว่ามีข้อความอัตโนมัติไหม
         intent.getStringExtra("autoMessage")?.let { message ->
             Log.d("ChatActivity", "✅ autoMessage received: $message")
             sendMessage(message)
         }
 
+        // เพิ่มโค้ดใหม่สำหรับการทำงานของปุ่ม Block/Unblock ที่นี่
+        val blockUnblockButton = binding.toolbar.findViewById<Button>(R.id.buttonBlockUnblockChat)
+        // กำหนดสถานะเริ่มต้นของปุ่ม Block/Unblock
+        updateBlockUnblockButton(blockUnblockButton)
+
+        // ตั้งค่า OnClickListener ให้สลับระหว่างการบล็อคและปลดบล็อค
+        blockUnblockButton.setOnClickListener {
+            toggleBlockStatus(blockUnblockButton)
+        }
+    }
+
+    // ฟังก์ชันที่ใช้ในการอัพเดตข้อความในปุ่ม Block/Unblock
+    private fun updateBlockUnblockButton(button: Button) {
+        button.text = if (isBlocked) "เลิกบล็อค" else "บล็อค"
     }
 
     override fun onResume() {
@@ -146,6 +154,49 @@ class ChatActivity : AppCompatActivity() {
         handler.post(refreshRunnable) // เริ่มการอัปเดตข้อความเมื่อ Activity กลับมาแสดง
     }
 
+    // ฟังก์ชันที่จะสลับสถานะ Block/Unblock และเปลี่ยนข้อความปุ่ม
+    private fun toggleBlockStatus(button: Button) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val url = if (isBlocked) {
+                getString(R.string.root_url) + "/api_v2/unblock-chat"
+            } else {
+                getString(R.string.root_url) + "/api_v2/block-chat"
+            }
+
+            val requestBody = FormBody.Builder()
+                .add("userID", senderID.toString())
+                .add("matchID", matchID.toString())
+                .apply {
+                    if (!isBlocked) {
+                        add("isBlocked", "1")  // บล็อค
+                    }
+                }
+                .build()
+
+            val request = Request.Builder().url(url).post(requestBody).build()
+
+            try {
+                val response = client.newCall(request).execute()
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        isBlocked = !isBlocked  // สลับสถานะบล็อค
+                        updateBlockUnblockButton(button) // อัพเดตข้อความปุ่ม
+                        val message = if (isBlocked) "บล็อคแชทเรียบร้อย" else "ปลดบล็อคแชทเรียบร้อย"
+                        Toast.makeText(this@ChatActivity, message, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        val message = if (isBlocked) "ไม่สามารถบล็อคแชทได้" else "ไม่สามารถปลดบล็อคแชทได้"
+                        Toast.makeText(this@ChatActivity, "$message ลองใหม่อีกครั้ง", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@ChatActivity, "เกิดข้อผิดพลาด: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
     override fun onPause() {
         super.onPause()
         handler.removeCallbacks(refreshRunnable) // หยุดการอัปเดตข้อความเมื่อ Activity หยุดทำงาน
@@ -173,7 +224,7 @@ class ChatActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         isBlocked = true
                         Toast.makeText(this@ChatActivity, "บล็อกแชทเรียบร้อย", Toast.LENGTH_SHORT).show()
-                        binding.toolbar.findViewById<Button>(R.id.buttonBlockChat).isEnabled = false
+                        binding.toolbar.findViewById<Button>(R.id.buttonBlockUnblockChat).isEnabled = false
                     }
                 } else {
                     withContext(Dispatchers.Main) {
@@ -204,7 +255,7 @@ class ChatActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         isBlocked = false
                         Toast.makeText(this@ChatActivity, "ปลดบล็อคแชทเรียบร้อย", Toast.LENGTH_SHORT).show()
-                        binding.toolbar.findViewById<Button>(R.id.buttonBlockChat).isEnabled = true
+                        binding.toolbar.findViewById<Button>(R.id.buttonBlockUnblockChat).isEnabled = true
                     }
                 } else {
                     withContext(Dispatchers.Main) {
