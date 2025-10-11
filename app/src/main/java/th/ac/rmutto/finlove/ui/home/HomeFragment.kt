@@ -45,7 +45,13 @@ import android.widget.ImageView
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import th.ac.rmutto.finlove.BioBottomSheetFragment
 import th.ac.rmutto.finlove.utils.AnimationHelper.animateImageSlideInFromRight
-
+import th.ac.rmutto.finlove.LoadingDialogFragment
+import android.graphics.drawable.Drawable
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.signature.ObjectKey
 
 private fun optDoubleOrNull(obj: org.json.JSONObject, key: String): Double? {
     val v = obj.opt(key)
@@ -63,6 +69,27 @@ private fun sanitizeJsonNumbers(raw: String?): String? {
         .replace(Regex("""\b-Infinity\b"""), "null")
 }
 class HomeFragment : Fragment() {
+
+    // ===== Loading dialog helpers =====
+    private var loadingDialog: LoadingDialogFragment? = null
+    private fun showLoading() {
+        if (loadingDialog?.isAdded != true) {
+            loadingDialog = LoadingDialogFragment.show(childFragmentManager)
+        }
+    }
+    private fun hideLoading() {
+        loadingDialog?.dismissAllowingStateLoss()
+        loadingDialog = null
+    }
+
+    /** (ทางเลือก) พรีโหลดรูปทั้งหมดให้เข้าดิสก์แคชก่อนขึ้นจอ */
+    private suspend fun preloadAllImages(urls: List<String>) = withContext(Dispatchers.IO) {
+        val app = requireContext().applicationContext
+        val targets = urls.filter { it.isNotBlank() }.map { u ->
+            Glide.with(app).downloadOnly().load(u).submit()
+        }
+        targets.forEach { t -> try { t.get() } catch (_: Exception) {} ; Glide.with(app).clear(t) }
+    }
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -125,28 +152,51 @@ class HomeFragment : Fragment() {
         recentlyDisliked.clear()
 
         // กู้คืน currentIndex หากมีการบันทึกไว้
+        showLoading()
+
         if (selectedUserID != -1) {
-            // ถ้ามี selectedUserID แสดงว่าเข้ามาจาก WhoLikeFragment
+            // เปิดจาก WhoLike → ดึงคนเดียว
             fetchUserByID(selectedUserID) { user ->
-                if (user != null) {
-                    users = listOf(user)  // แสดงเฉพาะคนนี้
-                    currentIndex = 0
-                    displayUser(currentIndex)
-                } else {
-                    Toast.makeText(requireContext(), "ไม่พบข้อมูลผู้ใช้ที่เลือก", Toast.LENGTH_SHORT).show()
+                lifecycleScope.launch {
+                    if (user != null) {
+                        users = listOf(user)
+                        currentIndex = 0
+
+                        // (ทางเลือก) พรีโหลดรูปก่อน
+                        val urls = users.map { it.profilePicture.trim() }.filter { it.isNotBlank() }
+                        preloadAllImages(urls)
+
+                        hideLoading()
+                        displayUser(currentIndex)
+                    } else {
+                        hideLoading()
+                        Toast.makeText(requireContext(), "ไม่พบข้อมูลผู้ใช้ที่เลือก", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         } else {
-            // ถ้าไม่มี selectedUserID แสดงรายชื่อผู้ใช้แนะนำตามปกติ
+            // ปกติ → ดึงลิสต์แนะนำ
             if (userID != -1) {
                 fetchRecommendedUsers { fetchedUsers ->
-                    if (fetchedUsers.isNotEmpty()) {
-                        users = fetchedUsers
-                        displayUser(currentIndex)
-                    } else {
-                        Toast.makeText(requireContext(), "ไม่พบผู้ใช้ที่แนะนำ", Toast.LENGTH_SHORT).show()
+                    lifecycleScope.launch {
+                        if (fetchedUsers.isNotEmpty()) {
+                            users = fetchedUsers
+                            currentIndex = 0
+
+                            // (ทางเลือก) พรีโหลดรูปก่อน
+                            val urls = users.map { it.profilePicture.trim() }.filter { it.isNotBlank() }
+                            preloadAllImages(urls)
+
+                            hideLoading()
+                            displayUser(currentIndex)
+                        } else {
+                            hideLoading()
+                            Toast.makeText(requireContext(), "ไม่พบผู้ใช้ที่แนะนำ", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
+            } else {
+                hideLoading()
             }
         }
 
@@ -377,54 +427,32 @@ class HomeFragment : Fragment() {
         val likeButton: ImageButton = userView.findViewById(R.id.buttonLike)
         val dislikeButton: ImageButton = userView.findViewById(R.id.buttonDislike)
         val labellist: TextView = userView.findViewById((R.id.labellist))
-
+        Log.d("HomeFragment", "📌 Displaying user: ${user.nickname}, UserID=${user.userID}")
+        Log.d("HomeFragment", "ProfilePicture URL: ${user.profilePicture}")
+        Log.d("HomeFragment", "ImageView tag before load: ${profileImage.tag}")
         nickname.text = user.nickname
 // ผูก tag กับ URL ที่ "normalize แล้ว"
         val expectedTag = user.profilePicture
         profileImage.tag = expectedTag
 
-// ใช้ขนาดเป้าหมายจริง ลดงานดีโคด
-        val w = if (profileImage.width > 0) profileImage.width else resources.displayMetrics.widthPixels
-        val h = if (profileImage.height > 0) profileImage.height else (w * 4) / 3  // ปรับอัตราส่วนตาม UI
-        val imageView = userView.findViewById<ImageView>(R.id.imageProfile)
-
+        val imageView = userView.findViewById<ImageView>(R.id.imageProfile)// ล้างภาพเก่า
+// เรียก animation
         animateImageSlideInFromRight(imageView) {
-            // ล้างงานเดิมกันภาพสลับช้า/ซ้อน (แนะนำ)
-            Glide.with(profileImage).clear(profileImage)
-            profileImage.animate().cancel()
-            profileImage.setImageDrawable(null)
-
-            Glide.with(requireContext())
-                .load(user.profilePicture)
-                .apply(
-                    RequestOptions()
-                        .disallowHardwareConfig()
-                        .format(DecodeFormat.PREFER_RGB_565)
-                        .override(w, h)                          // ✅ โหลดมาพอดีกับ ImageView
-                        .downsample(DownsampleStrategy.AT_MOST)  // ✅ ลดละเอียดลงถ้าไฟล์ใหญ่เกิน
-                        .timeout(15000) // รอสูงสุด 15 วิ ถ้าเกินถือว่า fail
-                )
-                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                .skipMemoryCache(false)
-                .dontAnimate()
-                .centerCrop()
-                .placeholder(R.drawable.ic_user)
-                .fallback(R.drawable.ic_user) // ✅ ถ้า URL เป็น null จะไม่ขึ้น error ก่อน
-                .error(R.drawable.error)
-                .into(profileImage)
-
-            // ✅ พรีโหลด nextUser ไว้ในแคช (ไม่มี into เพราะยังไม่แสดงผล)
-            // ✅ พรีโหลดรูปของ “คนถัดไป” โดยคำนวณ index จากลิสต์ (ไม่เรียก nextUser())
-            val nextIdx = if (index + 1 < users.size) index + 1 else 0
-            users.getOrNull(nextIdx)?.profilePicture?.let { nextUrl ->
-                Glide.with(requireContext())
-                    .load(nextUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                    .downsample(DownsampleStrategy.AT_MOST)
-                    .preload()
+            val rawUrl = user.profilePicture.trim()
+            if (rawUrl.isBlank()) {
+                profileImage.setImageResource(R.drawable.ic_user)
+            } else {
+                val finalUrl = rawUrl + (if (rawUrl.contains("?")) "&" else "?") + "u=${user.userID}"
+                Log.d("GLIDE_URL", "load -> $finalUrl")
+                Glide.with(this@HomeFragment)
+                    .load(finalUrl)
+                    .placeholder(R.drawable.ic_user)
+                    .error(R.drawable.error)
+                    .centerCrop()
+                    .signature(ObjectKey(finalUrl)) // กันแคชชน
+                    .into(profileImage)
             }
         }
-
 
         // ตรวจสอบสถานะ verify และแสดงไอคอนเครื่องหมายถูกหาก verify == 1
         if (user.verify == 1) {
@@ -846,6 +874,13 @@ class HomeFragment : Fragment() {
         return fallback
     }
 
+    private fun normalizeImageUrl(imageFile: String?): String {
+        val s = imageFile?.trim().orEmpty()            // << trim() กัน space/บรรทัดใหม่
+        if (s.isBlank()) return ""
+        return if (s.startsWith("http")) s
+        else getString(R.string.root_url2) + "/ai_v2/user/" + s.trimStart('/')
+    }
+
     private fun fetchUserByID(targetUserID: Int, callback: (User?) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
             val url = getString(R.string.root_url) + "/api_v2/user/detail"
@@ -893,12 +928,8 @@ class HomeFragment : Fragment() {
                     }
 
                     val imageFile = jsonObject.optString("imageFile")
-                    val profilePicture = if (imageFile.startsWith("http")) {
-                        imageFile
-                    } else {
-                        val baseImageUrl = getString(R.string.root_url2) + "/ai_v2/user/"
-                        baseImageUrl + imageFile
-                    }
+                    // ใหม่
+                    val profileUrl = normalizeImageUrl(jsonObject.optString("imageFile"))
 
                     val prefsList = mutableListOf<String>().apply {
                         jsonObject.optJSONArray("preferences")?.let { arr ->
@@ -924,7 +955,7 @@ class HomeFragment : Fragment() {
                     val user = User(
                         parsedId, // ★ ใช้ parsedId ที่เชื่อถือได้
                         jsonObject.optString("nickname"),
-                        profilePicture,
+                        profileUrl, // << ใช้ URL ที่ normalize แล้ว
                         jsonObject.optString("DateBirth", ""),
                         jsonObject.optInt("verify"),
                         prefsList,
@@ -1053,7 +1084,10 @@ class HomeFragment : Fragment() {
             val jsonArray = JSONArray(it)
             for (i in 0 until jsonArray.length()) {
                 val jsonObject = jsonArray.getJSONObject(i)
-                val imageFile = jsonObject.getString("imageFile")
+                // ---- รูป ----
+                val imageFileRaw = jsonObject.optString("imageFile", "")
+                val profileUrl = normalizeImageUrl(imageFileRaw)
+                Log.d("RECO_RAW", "uid=${jsonObject.optInt("UserID")} file=$imageFileRaw url=$profileUrl")
                 val prefsJsonArray = jsonObject.optJSONArray("preferences")
                 // preferences (ของเดิม)
                 val prefsList = mutableListOf<String>()
@@ -1086,14 +1120,13 @@ class HomeFragment : Fragment() {
                     }
                 }
 
-                Log.d("parseUsers", "User $i imageFile: $imageFile")  // เพิ่มบรรทัดนี้
                 Log.d("parseUsers", "User $i distance(raw)=${jsonObject.opt("distance")}")
                 Log.d("parseUsers", "User $i bio=${jsonObject.optString("bio")}")
 
                 val user = User(
                     jsonObject.getInt("UserID"),
                     jsonObject.getString("nickname"),
-                    jsonObject.getString("imageFile"),
+                    profileUrl, // << ใช้ URL ที่ normalize แล้ว
                     jsonObject.optString("dateBirth", ""),
                     jsonObject.getInt("verify"),
                     preferences = prefsList, // เพิ่มตรงนี้

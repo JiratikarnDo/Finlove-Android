@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("org.jetbrains.kotlin.kapt")   // << เพิ่มบรรทัดนี้
 }
 
 android {
@@ -87,9 +88,8 @@ dependencies {
     implementation("com.airbnb.android:lottie:5.0.3")
 
     // Glide for image loading
-    implementation("com.github.bumptech.glide:glide:4.15.1")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.github.bumptech.glide:okhttp3-integration:4.16.0")
     implementation ("com.github.bumptech.glide:okhttp3-integration:4.16.0")
 
     // Navigation Components
