@@ -26,6 +26,11 @@ import th.ac.rmutto.finlove.StringListAdapter
 
 class WhoLikeFragment : Fragment() {
 
+    private fun formatKm(km: Double?): String {
+        if (km == null) return "ไม่ทราบระยะทาง"
+        return if (km < 1.0) "น้อยกว่า 1 กม." else String.format(java.util.Locale("th","TH"), "%.1f กม.", km)
+    }
+
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: WholikeAdapter
     private lateinit var switchShowLiked: Switch
@@ -143,15 +148,22 @@ class WhoLikeFragment : Fragment() {
 
                             // ✅ กรองเฉพาะคนที่ยังไม่แมท
                             val filteredUsers = users.filter { it.id !in matchedIDs }
+                            // ✅ ทำ map สำหรับข้อความระยะทาง
+                            val distances = filteredUsers.associate { u -> u.id to formatKm(u.distance) }
 
                             activity?.runOnUiThread {
-                                adapter = WholikeAdapter(filteredUsers, { clickedUser ->
-                                    val bundle = Bundle().apply {
-                                        putInt("userID", currentUserID)
-                                        putInt("selectedUserID", clickedUser.id)
-                                    }
-                                    findNavController().navigate(R.id.navigation_home, bundle)
-                                }, itemClickable = !showLikedByMe) // << เพิ่มตรงนี้!
+                                adapter = WholikeAdapter(
+                                    filteredUsers,
+                                    { clickedUser ->
+                                        val bundle = Bundle().apply {
+                                            putInt("userID", currentUserID)
+                                            putInt("selectedUserID", clickedUser.id)
+                                        }
+                                        findNavController().navigate(R.id.navigation_home, bundle)
+                                    },
+                                    itemClickable = !showLikedByMe,
+                                    distances = distances
+                                )
                                 recyclerView.adapter = adapter
                             }
                         }

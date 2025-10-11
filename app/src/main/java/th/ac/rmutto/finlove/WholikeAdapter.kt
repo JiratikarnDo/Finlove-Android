@@ -17,7 +17,8 @@ import java.util.*
 class WholikeAdapter(
     private val items: List<User>, // หรือ UserLike หากคุณมี UserLike
     private val onItemClick: (User) -> Unit,  // เพิ่ม callback สำหรับคลิก
-    var itemClickable: Boolean = true  // เพิ่ม flag นี้!
+    var itemClickable: Boolean = true,  // เพิ่ม flag นี้!
+    private val distances: Map<Int, String> = emptyMap() // 👈 เพิ่มพารามิเตอร์นี้ (มีค่า default)
 ) : RecyclerView.Adapter<WholikeAdapter.ViewHolder>() {
 
     // ViewHolder สำหรับการอ้างถึง element ใน layout item

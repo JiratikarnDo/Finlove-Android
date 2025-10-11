@@ -963,7 +963,9 @@ class HomeFragment : Fragment() {
                         optDoubleOrNull(jsonObject, "longitude"),
                         allPreferences = allPrefs,
                         sharedPreferences = sharedPrefs,
-                        distance = optDoubleOrNull(jsonObject, "distance"),   // ✅ ใช้ helper
+                        // ⬇️ แก้ตรงนี้: รับ distance_km (กม.) และ fallback ไปที่ distance
+                        distance = optDoubleOrNull(jsonObject, "distance_km")
+                            ?: optDoubleOrNull(jsonObject, "distance"),
                         bio = jsonObject.optString("bio", null)   // 👈 เพิ่มตรงนี้
                     )
 
